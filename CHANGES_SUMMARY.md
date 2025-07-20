@@ -28,25 +28,30 @@ The player model has been successfully updated to include a new `Stats` structur
         "level": 3.5,
         "stamina": 0,
         "speed": 0
-    },
-    "Nationality": "🇪🇸"
+    }
 }
 ```
 
 ### 2. New Fields Added
 
 - **`Stats`** (object): A new container for player statistics
-  - **`level`** (float): Player's skill level (replaces the old `Rating` field)
-  - **`stamina`** (int): Player's stamina stat (defaults to 0)
-  - **`speed`** (int): Player's speed stat (defaults to 0)
+  - **`level`** (float): Player's skill level (replaces the old `Rating` field) - range 1.0-5.0
+  - **`stamina`** (float): Player's stamina stat (defaults to 3.0) - range 1.0-5.0
+  - **`speed`** (float): Player's speed stat (defaults to 3.0) - range 1.0-5.0
 
-### 3. Algorithm Updates
+### 3. Removed Fields
+
+- **`Nationality`**: This field has been removed from the player model
+
+### 4. Algorithm Updates
 
 - **Team Balance Calculation**: Now uses `player["Stats"]["level"]` instead of `player["Rating"]`
+- **Multi-Stat Balancing**: Algorithm now considers all three stats (level, stamina, speed) when creating balanced teams
+- **Total Balance Score**: Calculated as the sum of differences across all stats: `|team1_level - team2_level| + |team1_stamina - team2_stamina| + |team1_speed - team2_speed|`
 - **Display Function**: Updated to show the new stats structure in team output
 - **Position Validation**: Remains unchanged and continues to work with the new structure
 
-### 4. Backward Compatibility
+### 5. Backward Compatibility
 
 - All existing functionality is preserved
 - The team balancing algorithm works exactly the same way
@@ -85,9 +90,10 @@ The player model has been successfully updated to include a new `Stats` structur
 - New players automatically get `stamina: 0` and `speed: 0` as default values
 - This ensures backward compatibility and easy migration
 
-### 2. Level-Based Balancing
-- Team distribution now uses the `level` field from the `Stats` object
-- This provides more semantic meaning than the generic `Rating` field
+### 2. Multi-Stat Balancing
+- Team distribution now considers all three stats (level, stamina, speed) for optimal balance
+- Total balance score ensures teams are balanced across all attributes, not just level
+- This provides more comprehensive team balancing than using only level
 
 ### 3. Extensible Structure
 - The `Stats` object can easily accommodate additional statistics in the future
@@ -108,10 +114,9 @@ player = {
     "Position": ["FW", "RW"],
     "Stats": {
         "level": 5.0,
-        "stamina": 90,
-        "speed": 85
-    },
-    "Nationality": "🇦🇷"
+        "stamina": 4.8,
+        "speed": 4.5
+    }
 }
 ```
 
@@ -124,9 +129,8 @@ player = create_player_with_stats(
     name="Ronaldo",
     positions=["FW", "LW"],
     level=4.9,
-    stamina=88,
-    speed=90,
-    nationality="🇵🇹"
+    stamina=4.7,
+    speed=4.6
 )
 ```
 
@@ -156,4 +160,7 @@ python example_usage.py
 - Existing code that references `player["Rating"]` should be updated to `player["Stats"]["level"]`
 - The team balancing algorithm automatically uses the new structure
 - No changes needed for position validation or constraint handling
-- Display output now shows additional stats information 
+- Display output now shows additional stats information
+- **Nationality field has been removed** - any code referencing `player["Nationality"]` should be updated
+- **All stats now use 1.0-5.0 range** - stamina and speed are now float values instead of integers
+- **Algorithm now balances all stats** - teams are balanced across level, stamina, and speed instead of just level 

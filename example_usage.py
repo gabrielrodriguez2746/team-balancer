@@ -7,7 +7,7 @@ This demonstrates how to create players with custom stats and use the team balan
 
 from team_balancer import generate_balanced_teams, display_teams, POSITIONS_ALLOWED
 
-def create_player_with_stats(player_id, name, positions, level, stamina=0, speed=0, nationality="🏳️"):
+def create_player_with_stats(player_id, name, positions, level, stamina=3.0, speed=3.0):
     """
     Helper function to create a player with the new Stats structure.
     
@@ -15,10 +15,9 @@ def create_player_with_stats(player_id, name, positions, level, stamina=0, speed
         player_id (int): Unique player identifier
         name (str): Player name
         positions (list): List of positions the player can play
-        level (float): Player's skill level (used for team balancing)
-        stamina (int): Player's stamina stat (defaults to 0)
-        speed (int): Player's speed stat (defaults to 0)
-        nationality (str): Player's nationality flag
+        level (float): Player's skill level (used for team balancing) - range 1.0-5.0
+        stamina (float): Player's stamina stat (defaults to 3.0) - range 1.0-5.0
+        speed (float): Player's speed stat (defaults to 3.0) - range 1.0-5.0
     
     Returns:
         dict: Player object with the new structure
@@ -31,8 +30,7 @@ def create_player_with_stats(player_id, name, positions, level, stamina=0, speed
             "level": level,
             "stamina": stamina,
             "speed": speed
-        },
-        "Nationality": nationality
+        }
     }
 
 def main():
@@ -40,18 +38,18 @@ def main():
     
     # Create some example players with custom stats
     custom_players = [
-        create_player_with_stats(1, "Messi", ["FW", "RW"], 5.0, stamina=90, speed=85, nationality="🇦🇷"),
-        create_player_with_stats(2, "Ronaldo", ["FW", "LW"], 4.9, stamina=88, speed=90, nationality="🇵🇹"),
-        create_player_with_stats(3, "Neymar", ["FW", "LW"], 4.8, stamina=75, speed=88, nationality="🇧🇷"),
-        create_player_with_stats(4, "Mbappé", ["FW", "RW"], 4.7, stamina=85, speed=95, nationality="🇫🇷"),
-        create_player_with_stats(5, "Haaland", ["FW"], 4.6, stamina=80, speed=75, nationality="🇳🇴"),
-        create_player_with_stats(6, "De Bruyne", ["MF", "CM"], 4.8, stamina=85, speed=70, nationality="🇧🇪"),
-        create_player_with_stats(7, "Modric", ["MF", "CM"], 4.7, stamina=80, speed=65, nationality="🇭🇷"),
-        create_player_with_stats(8, "Kimmich", ["DF", "MF"], 4.5, stamina=85, speed=75, nationality="🇩🇪"),
-        create_player_with_stats(9, "Van Dijk", ["DF", "CB"], 4.6, stamina=85, speed=70, nationality="🇳🇱"),
-        create_player_with_stats(10, "Alisson", ["GK"], 4.4, stamina=80, speed=60, nationality="🇧🇷"),
-        create_player_with_stats(11, "Courtois", ["GK"], 4.3, stamina=85, speed=55, nationality="🇧🇪"),
-        create_player_with_stats(12, "Dias", ["DF", "CB"], 4.4, stamina=80, speed=65, nationality="🇵🇹"),
+        create_player_with_stats(1, "Messi", ["FW", "RW"], 5.0, stamina=4.8, speed=4.5),
+        create_player_with_stats(2, "Ronaldo", ["FW", "LW"], 4.9, stamina=4.7, speed=4.6),
+        create_player_with_stats(3, "Neymar", ["FW", "LW"], 4.8, stamina=4.2, speed=4.4),
+        create_player_with_stats(4, "Mbappé", ["FW", "RW"], 4.7, stamina=4.5, speed=5.0),
+        create_player_with_stats(5, "Haaland", ["FW"], 4.6, stamina=4.3, speed=3.8),
+        create_player_with_stats(6, "De Bruyne", ["MF", "CM"], 4.8, stamina=4.5, speed=3.2),
+        create_player_with_stats(7, "Modric", ["MF", "CM"], 4.7, stamina=4.3, speed=3.1),
+        create_player_with_stats(8, "Kimmich", ["DF", "MF"], 4.5, stamina=4.5, speed=3.8),
+        create_player_with_stats(9, "Van Dijk", ["DF", "CB"], 4.6, stamina=4.5, speed=3.2),
+        create_player_with_stats(10, "Alisson", ["GK"], 4.4, stamina=4.3, speed=2.8),
+        create_player_with_stats(11, "Courtois", ["GK"], 4.3, stamina=4.5, speed=2.5),
+        create_player_with_stats(12, "Dias", ["DF", "CB"], 4.4, stamina=4.3, speed=3.1),
     ]
     
     print("=== Example: Custom Players with Stats ===")
@@ -64,7 +62,6 @@ def main():
         stats = player["Stats"]
         print(f"{i+1}. {player['Name']} ({', '.join(player['Position'])})")
         print(f"   Level: {stats['level']:.1f}, Stamina: {stats['stamina']}, Speed: {stats['speed']}")
-        print(f"   Nationality: {player['Nationality']}")
         print()
     
     # Generate balanced teams
@@ -84,12 +81,12 @@ def main():
     
     # Create players with varying stats to show the difference
     varied_players = [
-        create_player_with_stats(1, "Fast Player", ["FW"], 3.0, stamina=60, speed=95, nationality="🇯🇲"),
-        create_player_with_stats(2, "Strong Player", ["DF"], 4.0, stamina=95, speed=50, nationality="🇳🇴"),
-        create_player_with_stats(3, "Balanced Player", ["MF"], 3.5, stamina=75, speed=75, nationality="🇩🇪"),
-        create_player_with_stats(4, "Skilled Player", ["FW"], 4.5, stamina=70, speed=80, nationality="🇧🇷"),
-        create_player_with_stats(5, "Endurance Player", ["MF"], 3.2, stamina=100, speed=60, nationality="🇰🇪"),
-        create_player_with_stats(6, "Technical Player", ["FW"], 4.2, stamina=65, speed=70, nationality="🇪🇸"),
+        create_player_with_stats(1, "Fast Player", ["FW"], 3.0, stamina=2.8, speed=5.0),
+        create_player_with_stats(2, "Strong Player", ["DF"], 4.0, stamina=5.0, speed=2.5),
+        create_player_with_stats(3, "Balanced Player", ["MF"], 3.5, stamina=3.8, speed=3.8),
+        create_player_with_stats(4, "Skilled Player", ["FW"], 4.5, stamina=3.2, speed=4.0),
+        create_player_with_stats(5, "Endurance Player", ["MF"], 3.2, stamina=5.0, speed=2.8),
+        create_player_with_stats(6, "Technical Player", ["FW"], 4.2, stamina=3.1, speed=3.5),
     ]
     
     print("Players with varied stats:")

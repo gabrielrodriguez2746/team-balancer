@@ -12,47 +12,47 @@ POSITIONS_ALLOWED = ["GK", "DF", "MF", "FW", "LW", "RW", "CM", "CB", "LB", "RB"]
 
 # Full list of available players with unique IDs
 all_players = [
-    {"Id": 1, "Name": "Cesar", "Position": ["DF"], "Stats": {"level": 3.5, "stamina": 0, "speed": 0}, "Nationality": "🇨🇱"},
-    {"Id": 2, "Name": "Lucas FC", "Position": ["FW"], "Stats": {"level": 3.8, "stamina": 0, "speed": 0}, "Nationality": "🇦🇷"},
-    {"Id": 3, "Name": "Nico Laderach", "Position": ["DF"], "Stats": {"level": 3.6, "stamina": 0, "speed": 0}, "Nationality": "🇦🇷"},
-    {"Id": 4, "Name": "Tomazzo", "Position": ["LW"], "Stats": {"level": 2.1, "stamina": 0, "speed": 0}, "Nationality": "🇧🇷"},
-    {"Id": 5, "Name": "Alexsandro", "Position": ["CM"], "Stats": {"level": 3.3, "stamina": 0, "speed": 0}, "Nationality": "🇧🇷"},
-    {"Id": 6, "Name": "Edu", "Position": ["DF"], "Stats": {"level": 1.0, "stamina": 0, "speed": 0}, "Nationality": "🇪🇸🇪🇨"},
-    {"Id": 7, "Name": "Sergio Borne", "Position": ["RW"], "Stats": {"level": 3.2, "stamina": 0, "speed": 0}, "Nationality": "🇪🇸"},
-    {"Id": 8, "Name": "Ale Masferrer", "Position": ["FW"], "Stats": {"level": 3.5, "stamina": 0, "speed": 0}, "Nationality": "🇪🇸"},
-    {"Id": 9, "Name": "Pablo", "Position": ["RW"], "Stats": {"level": 4.0, "stamina": 0, "speed": 0}, "Nationality": "🇲🇽"},
-    {"Id": 10, "Name": "Davide", "Position": ["FW", "CM"], "Stats": {"level": 4.0, "stamina": 0, "speed": 0}, "Nationality": "🇮🇹"},
-    {"Id": 11, "Name": "Gabo", "Position": ["CM"], "Stats": {"level": 4.0, "stamina": 0, "speed": 0}, "Nationality": "🇻🇪"},
-    {"Id": 12, "Name": "Shapi", "Position": ["RW"], "Stats": {"level": 1.8, "stamina": 0, "speed": 0}, "Nationality": "🇻🇪"},
-    {"Id": 13, "Name": "Leo", "Position": ["LW"], "Stats": {"level": 3.4, "stamina": 0, "speed": 0}, "Nationality": "🇦🇷"},
-    {"Id": 14, "Name": "Roger", "Position": ["DF"], "Stats": {"level": 3.7, "stamina": 0, "speed": 0}, "Nationality": "🇪🇸"},
-    {"Id": 15, "Name": "Fran", "Position": ["LW"], "Stats": {"level": 2.5, "stamina": 0, "speed": 0}, "Nationality": "🇪🇸"},
-    {"Id": 16, "Name": "Isra", "Position": ["RW"], "Stats": {"level": 2.2, "stamina": 0, "speed": 0}, "Nationality": "🇻🇪"},
-    {"Id": 17, "Name": "Luis", "Position": ["CM"], "Stats": {"level": 3.7, "stamina": 0, "speed": 0}, "Nationality": "🇪🇸"},
-    {"Id": 18, "Name": "Emmanuel", "Position": ["FW"], "Stats": {"level": 1.5, "stamina": 0, "speed": 0}, "Nationality": "🇬🇧"},
-    {"Id": 19, "Name": "Salta", "Position": ["FW", "CM"], "Stats": {"level": 4.0, "stamina": 0, "speed": 0}, "Nationality": "🇦🇷"},
-    {"Id": 20, "Name": "Juan Salamone", "Position": ["RW"], "Stats": {"level": 3.7, "stamina": 0, "speed": 0}, "Nationality": "🇦🇷"},
-    {"Id": 21, "Name": "Victor Victor Victor", "Position": ["DF"], "Stats": {"level": 3.0, "stamina": 0, "speed": 0}, "Nationality": "🇨🇴"},
-    {"Id": 22, "Name": "Amirhossein", "Position": ["FW"], "Stats": {"level": 2.8, "stamina": 0, "speed": 0}, "Nationality": "🇮🇷"},
-    {"Id": 23, "Name": "Victor Lopez", "Position": ["DF"], "Stats": {"level": 2.4, "stamina": 0, "speed": 0}, "Nationality": "🇨🇴"},
-    {"Id": 24, "Name": "Jose", "Position": ["RW"], "Stats": {"level": 3.8, "stamina": 0, "speed": 0}, "Nationality": "🇻🇪"},
-    {"Id": 25, "Name": "Diego", "Position": ["DF"], "Stats": {"level": 4.0, "stamina": 0, "speed": 0}, "Nationality": "🇨🇷"},
-    {"Id": 26, "Name": "Sergio Pino", "Position": ["RW"], "Stats": {"level": 2.8, "stamina": 0, "speed": 0}, "Nationality": "🇪🇸"},
-    {"Id": 27, "Name": "Peluk", "Position": ["CM"], "Stats": {"level": 4.0, "stamina": 0, "speed": 0}, "Nationality": "🇪🇸"},
-    {"Id": 28, "Name": "Checo", "Position": ["DF"], "Stats": {"level": 4.0, "stamina": 0, "speed": 0}, "Nationality": "🇲🇽"},
-    {"Id": 29, "Name": "Brian", "Position": ["RW", "DF"], "Stats": {"level": 3.3, "stamina": 0, "speed": 0}, "Nationality": "🇪🇸"},
-    {"Id": 30, "Name": "Lucho", "Position": ["FW", "CM"], "Stats": {"level": 4.0, "stamina": 0, "speed": 0}, "Nationality": "🇪🇸"},
-    {"Id": 31, "Name": "Jordi Capeta", "Position": ["CM"], "Stats": {"level": 4.5, "stamina": 0, "speed": 0}, "Nationality": "🇪🇸"},
-    {"Id": 32, "Name": "Royer", "Position": ["DF"], "Stats": {"level": 3.0, "stamina": 0, "speed": 0}, "Nationality": "🇪🇸"},
-    {"Id": 33, "Name": "Diyan", "Position": ["DF"], "Stats": {"level": 3.2, "stamina": 0, "speed": 0}, "Nationality": "🇪🇸"},
-    {"Id": 34, "Name": "Armen", "Position": ["DF"], "Stats": {"level": 3.7, "stamina": 0, "speed": 0}, "Nationality": "🇦🇷"},
-    {"Id": 35, "Name": "Damian", "Position": ["CM"], "Stats": {"level": 4.0, "stamina": 0, "speed": 0}, "Nationality": "🇦🇷"},
-    {"Id": 36, "Name": "Oscar Miercoles", "Position": ["DF"], "Stats": {"level": 3.0, "stamina": 0, "speed": 0}, "Nationality": "🇨🇴"},
-    {"Id": 37, "Name": "Oscar delantero", "Position": ["FW"], "Stats": {"level": 4.2, "stamina": 0, "speed": 0}, "Nationality": "🇨🇴"},
-    {"Id": 38, "Name": "Andres", "Position": ["DF"], "Stats": {"level": 3.0, "stamina": 0, "speed": 0}, "Nationality": "🇨🇴"},
-    {"Id": 39, "Name": "Erik", "Position": ["FW", "CM", "DF"], "Stats": {"level": 5.0, "stamina": 0, "speed": 0}, "Nationality": "🇮🇹"},
-    {"Id": 40, "Name": "Edu Ochoa", "Position": ["CM"], "Stats": {"level": 3.3, "stamina": 0, "speed": 0}, "Nationality": "🏳️"},
-    {"Id": 41, "Name": "Marc portero", "Position": ["DF"], "Stats": {"level": 4.0, "stamina": 0, "speed": 0}, "Nationality": "🇪🇸"},
+    {"Id": 1, "Name": "Cesar", "Position": ["DF"], "Stats": {"level": 3.5, "stamina": 3.2, "speed": 2.8}},
+    {"Id": 2, "Name": "Lucas FC", "Position": ["FW"], "Stats": {"level": 3.8, "stamina": 3.5, "speed": 4.1}},
+    {"Id": 3, "Name": "Nico Laderach", "Position": ["DF"], "Stats": {"level": 3.6, "stamina": 3.8, "speed": 3.0}},
+    {"Id": 4, "Name": "Tomazzo", "Position": ["LW"], "Stats": {"level": 2.1, "stamina": 2.5, "speed": 3.8}},
+    {"Id": 5, "Name": "Alexsandro", "Position": ["CM"], "Stats": {"level": 3.3, "stamina": 4.2, "speed": 3.1}},
+    {"Id": 6, "Name": "Edu", "Position": ["DF"], "Stats": {"level": 1.0, "stamina": 1.5, "speed": 1.8}},
+    {"Id": 7, "Name": "Sergio Borne", "Position": ["RW"], "Stats": {"level": 3.2, "stamina": 3.0, "speed": 3.9}},
+    {"Id": 8, "Name": "Ale Masferrer", "Position": ["FW"], "Stats": {"level": 3.5, "stamina": 3.7, "speed": 3.6}},
+    {"Id": 9, "Name": "Pablo", "Position": ["RW"], "Stats": {"level": 4.0, "stamina": 3.8, "speed": 4.3}},
+    {"Id": 10, "Name": "Davide", "Position": ["FW", "CM"], "Stats": {"level": 4.0, "stamina": 4.1, "speed": 3.7}},
+    {"Id": 11, "Name": "Gabo", "Position": ["CM"], "Stats": {"level": 4.0, "stamina": 4.5, "speed": 3.2}},
+    {"Id": 12, "Name": "Shapi", "Position": ["RW"], "Stats": {"level": 1.8, "stamina": 2.2, "speed": 3.5}},
+    {"Id": 13, "Name": "Leo", "Position": ["LW"], "Stats": {"level": 3.4, "stamina": 3.3, "speed": 3.8}},
+    {"Id": 14, "Name": "Roger", "Position": ["DF"], "Stats": {"level": 3.7, "stamina": 4.0, "speed": 3.1}},
+    {"Id": 15, "Name": "Fran", "Position": ["LW"], "Stats": {"level": 2.5, "stamina": 2.8, "speed": 3.4}},
+    {"Id": 16, "Name": "Isra", "Position": ["RW"], "Stats": {"level": 2.2, "stamina": 2.5, "speed": 3.6}},
+    {"Id": 17, "Name": "Luis", "Position": ["CM"], "Stats": {"level": 3.7, "stamina": 4.3, "speed": 3.0}},
+    {"Id": 18, "Name": "Emmanuel", "Position": ["FW"], "Stats": {"level": 1.5, "stamina": 2.0, "speed": 2.8}},
+    {"Id": 19, "Name": "Salta", "Position": ["FW", "CM"], "Stats": {"level": 4.0, "stamina": 4.2, "speed": 3.5}},
+    {"Id": 20, "Name": "Juan Salamone", "Position": ["RW"], "Stats": {"level": 3.7, "stamina": 3.6, "speed": 4.0}},
+    {"Id": 21, "Name": "Victor Victor Victor", "Position": ["DF"], "Stats": {"level": 3.0, "stamina": 3.4, "speed": 2.9}},
+    {"Id": 22, "Name": "Amirhossein", "Position": ["FW"], "Stats": {"level": 2.8, "stamina": 3.1, "speed": 3.3}},
+    {"Id": 23, "Name": "Victor Lopez", "Position": ["DF"], "Stats": {"level": 2.4, "stamina": 2.8, "speed": 2.5}},
+    {"Id": 24, "Name": "Jose", "Position": ["RW"], "Stats": {"level": 3.8, "stamina": 3.5, "speed": 4.2}},
+    {"Id": 25, "Name": "Diego", "Position": ["DF"], "Stats": {"level": 4.0, "stamina": 4.1, "speed": 3.3}},
+    {"Id": 26, "Name": "Sergio Pino", "Position": ["RW"], "Stats": {"level": 2.8, "stamina": 2.9, "speed": 3.7}},
+    {"Id": 27, "Name": "Peluk", "Position": ["CM"], "Stats": {"level": 4.0, "stamina": 4.4, "speed": 3.1}},
+    {"Id": 28, "Name": "Checo", "Position": ["DF"], "Stats": {"level": 4.0, "stamina": 4.2, "speed": 3.4}},
+    {"Id": 29, "Name": "Brian", "Position": ["RW", "DF"], "Stats": {"level": 3.3, "stamina": 3.8, "speed": 3.2}},
+    {"Id": 30, "Name": "Lucho", "Position": ["FW", "CM"], "Stats": {"level": 4.0, "stamina": 4.0, "speed": 3.5}},
+    {"Id": 31, "Name": "Jordi Capeta", "Position": ["CM"], "Stats": {"level": 4.5, "stamina": 4.6, "speed": 3.8}},
+    {"Id": 32, "Name": "Royer", "Position": ["DF"], "Stats": {"level": 3.0, "stamina": 3.3, "speed": 2.7}},
+    {"Id": 33, "Name": "Diyan", "Position": ["DF"], "Stats": {"level": 3.2, "stamina": 3.5, "speed": 2.9}},
+    {"Id": 34, "Name": "Armen", "Position": ["DF"], "Stats": {"level": 3.7, "stamina": 3.9, "speed": 3.2}},
+    {"Id": 35, "Name": "Damian", "Position": ["CM"], "Stats": {"level": 4.0, "stamina": 4.3, "speed": 3.4}},
+    {"Id": 36, "Name": "Oscar Miercoles", "Position": ["DF"], "Stats": {"level": 3.0, "stamina": 3.2, "speed": 2.8}},
+    {"Id": 37, "Name": "Oscar delantero", "Position": ["FW"], "Stats": {"level": 4.2, "stamina": 3.8, "speed": 4.1}},
+    {"Id": 38, "Name": "Andres", "Position": ["DF"], "Stats": {"level": 3.0, "stamina": 3.4, "speed": 2.9}},
+    {"Id": 39, "Name": "Erik", "Position": ["FW", "CM", "DF"], "Stats": {"level": 5.0, "stamina": 4.8, "speed": 4.5}},
+    {"Id": 40, "Name": "Edu Ochoa", "Position": ["CM"], "Stats": {"level": 3.3, "stamina": 3.6, "speed": 3.0}},
+    {"Id": 41, "Name": "Marc portero", "Position": ["DF"], "Stats": {"level": 4.0, "stamina": 4.1, "speed": 3.3}},
 ]
 
 # Specify today's players by ID
@@ -117,46 +117,62 @@ def generate_balanced_teams(players, team_size=TEAM_SIZE, must_be_separate=MUST_
         # Add unique team configuration to the set
         unique_combinations.add(combination_key)
 
-        # Calculate average levels for balance
+        # Calculate average stats for balance (level, stamina, speed)
         team1_avg_level = sum(p["Stats"]["level"] for p in team1) / team_size
         team2_avg_level = sum(p["Stats"]["level"] for p in team2) / team_size
         level_diff = abs(team1_avg_level - team2_avg_level)
+        
+        team1_avg_stamina = sum(p["Stats"]["stamina"] for p in team1) / team_size
+        team2_avg_stamina = sum(p["Stats"]["stamina"] for p in team2) / team_size
+        stamina_diff = abs(team1_avg_stamina - team2_avg_stamina)
+        
+        team1_avg_speed = sum(p["Stats"]["speed"] for p in team1) / team_size
+        team2_avg_speed = sum(p["Stats"]["speed"] for p in team2) / team_size
+        speed_diff = abs(team1_avg_speed - team2_avg_speed)
+        
+        # Calculate total balance score (weighted sum of all stat differences)
+        # You can adjust these weights to prioritize certain stats
+        total_balance_score = level_diff + stamina_diff + speed_diff
 
         # Add this combination to the best_combinations list
-        best_combinations.append((team1, team2, team1_avg_level, team2_avg_level, level_diff))
+        best_combinations.append((team1, team2, team1_avg_level, team2_avg_level, total_balance_score, 
+                                 team1_avg_stamina, team2_avg_stamina, team1_avg_speed, team2_avg_speed))
 
     print(f"Total valid combinations before diversity filter: {len(best_combinations)}")
 
     # Apply diversity filter
     diverse_combinations = []
-    for team1, team2, team1_avg, team2_avg, diff in best_combinations:
+    for team1, team2, team1_avg, team2_avg, total_score, team1_stamina, team2_stamina, team1_speed, team2_speed in best_combinations:
         if all(
             len(set(player['Id'] for player in team1) & set(player['Id'] for player in existing_team1)) <= diversity_threshold
             and len(set(player['Id'] for player in team2) & set(player['Id'] for player in existing_team2)) <= diversity_threshold
-            for existing_team1, existing_team2, _, _, _ in diverse_combinations
+            for existing_team1, existing_team2, _, _, _, _, _, _, _ in diverse_combinations
         ):
-            diverse_combinations.append((team1, team2, team1_avg, team2_avg, diff))
+            diverse_combinations.append((team1, team2, team1_avg, team2_avg, total_score, 
+                                       team1_stamina, team2_stamina, team1_speed, team2_speed))
 
     print(f"Total valid combinations after diversity filter: {len(diverse_combinations)}")
 
     # Select the top N combinations after diversity filtering
-    diverse_combinations = sorted(diverse_combinations, key=lambda x: x[-1])[:top_n]
+    diverse_combinations = sorted(diverse_combinations, key=lambda x: x[4])[:top_n]  # Sort by total_score (index 4)
 
     return diverse_combinations
 
 # Display teams
 def display_teams(best_combinations):
-    for idx, (team1, team2, team1_avg, team2_avg, diff) in enumerate(best_combinations, 1):
-        print(f"\n**Opción {idx} - Diferencia de Nivel: {diff:.2f}**")
-        print("\n**Equipo 1 (Nivel promedio: {:.2f}):**".format(team1_avg))
+    for idx, (team1, team2, team1_avg, team2_avg, total_score, team1_stamina, team2_stamina, team1_speed, team2_speed) in enumerate(best_combinations, 1):
+        print(f"\n**Opción {idx} - Puntuación de Balance Total: {total_score:.2f}**")
+        print(f"**Diferencias:** Nivel: {abs(team1_avg - team2_avg):.2f}, Stamina: {abs(team1_stamina - team2_stamina):.2f}, Velocidad: {abs(team1_speed - team2_speed):.2f}")
+        
+        print(f"\n**Equipo 1 - Promedios:** Nivel: {team1_avg:.2f}, Stamina: {team1_stamina:.2f}, Velocidad: {team1_speed:.2f}")
         for i, player in enumerate(team1, 1):
             stats = player['Stats']
-            print(f"{i}. {player['Name']} ({', '.join(player['Position'])}) - Nivel: {stats['level']:.1f}, Stamina: {stats['stamina']}, Velocidad: {stats['speed']}")
+            print(f"{i}. {player['Name']} ({', '.join(player['Position'])}) - Nivel: {stats['level']:.1f}, Stamina: {stats['stamina']:.1f}, Velocidad: {stats['speed']:.1f}")
 
-        print("\n**Equipo 2 (Nivel promedio: {:.2f}):**".format(team2_avg))
+        print(f"\n**Equipo 2 - Promedios:** Nivel: {team2_avg:.2f}, Stamina: {team2_stamina:.2f}, Velocidad: {team2_speed:.2f}")
         for i, player in enumerate(team2, 1):
             stats = player['Stats']
-            print(f"{i}. {player['Name']} ({', '.join(player['Position'])}) - Nivel: {stats['level']:.1f}, Stamina: {stats['stamina']}, Velocidad: {stats['speed']}")
+            print(f"{i}. {player['Name']} ({', '.join(player['Position'])}) - Nivel: {stats['level']:.1f}, Stamina: {stats['stamina']:.1f}, Velocidad: {stats['speed']:.1f}")
 
 # Run the program
 def main():
