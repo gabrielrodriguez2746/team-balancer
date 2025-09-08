@@ -427,5 +427,24 @@
       "stamina": 2.75,
       "speed": 2.5
     }
+  },
+  {
+    "Id": 28,
+    "Name": "Cesar",
+    "Position": [
+      "DF",
+      "MF",
+      "LW",
+      "RW",
+      "CM",
+      "LB",
+      "RB",
+      "CB"
+    ],
+    "Stats": {
+      "level": 3.83,
+      "stamina": 2.67,
+      "speed": 3.17
+    }
   }
 ]
