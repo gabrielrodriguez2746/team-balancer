@@ -66,23 +66,23 @@ The player model has been successfully updated to include a new `Stats` structur
 - Updated display function to show new stats
 - All existing players now have default values for `stamina` and `speed` (set to 0)
 
-### 2. `test_team_balancer.py` (New)
-- Comprehensive unit test suite with 10 test cases
+### 2. `test_team_balancer_new.py` (Enhanced)
+- Comprehensive test suite with 17 test cases
 - Tests cover all major functionality including:
-  - Position validation
-  - Team generation with and without constraints
-  - Multi-position players
-  - Team balance optimization
-  - Diversity filtering
-  - Edge cases
-  - New stats structure validation
-  - Level calculation verification
+  - Player models and validation
+  - Registry operations
+  - Team generation with constraints
+  - Configuration management
+  - Data persistence
+  - Integration workflows
+  - Edge cases and error handling
 
-### 3. `example_usage.py` (New)
-- Demonstrates how to create players with custom stats
-- Shows how to use the new player model structure
-- Includes helper function `create_player_with_stats()`
-- Examples with realistic player data and varied stats
+### 3. Enhanced Architecture
+- Modular design with separated concerns
+- Configuration management system
+- Data persistence with JSON files
+- Modern UI with CRUD operations
+- Comprehensive error handling
 
 ## Key Features
 
@@ -120,17 +120,14 @@ player = {
 }
 ```
 
-### Using the Helper Function
+### Using the Modern API
 ```python
-from example_usage import create_player_with_stats
+from team_balancer import Player, PlayerStats, Position
 
-player = create_player_with_stats(
-    player_id=1,
+player = Player(
     name="Ronaldo",
-    positions=["FW", "LW"],
-    level=4.9,
-    stamina=4.7,
-    speed=4.6
+    positions=[Position.FW, Position.LW],
+    stats=PlayerStats(level=4.9, stamina=4.7, speed=4.6)
 )
 ```
 
@@ -138,12 +135,12 @@ player = create_player_with_stats(
 
 Run the test suite to verify everything works:
 ```bash
-python test_team_balancer.py
+python test_team_balancer_new.py
 ```
 
-Run the example to see the new features in action:
+Run the main application:
 ```bash
-python example_usage.py
+python team_balancer.py
 ```
 
 ## Benefits
