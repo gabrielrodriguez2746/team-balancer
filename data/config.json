@@ -1,0 +1,18 @@
+{
+  "team_size": 6,
+  "top_n_teams": 3,
+  "diversity_threshold": 3.0,
+  "must_be_on_different_teams": [
+    [
+      15,
+      23
+    ]
+  ],
+  "must_be_on_same_teams": [],
+  "stat_weights": {
+    "level": 1.0,
+    "stamina": 1.0,
+    "speed": 1.0
+  },
+  "log_level": "INFO"
+}
