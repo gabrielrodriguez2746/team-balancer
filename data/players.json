@@ -1,0 +1,431 @@
+[
+  {
+    "Id": 1,
+    "Name": "Gabo",
+    "Position": [
+      "DF",
+      "FW",
+      "MF",
+      "CB",
+      "LB",
+      "CM",
+      "RB",
+      "RW",
+      "LW"
+    ],
+    "Stats": {
+      "level": 4.2,
+      "stamina": 5.0,
+      "speed": 4.1
+    }
+  },
+  {
+    "Id": 2,
+    "Name": "Armen",
+    "Position": [
+      "DF",
+      "CB",
+      "MF",
+      "LB",
+      "RB",
+      "LW"
+    ],
+    "Stats": {
+      "level": 3.1,
+      "stamina": 2.7,
+      "speed": 2.4
+    }
+  },
+  {
+    "Id": 3,
+    "Name": "Victor Victor Victor",
+    "Position": [
+      "DF",
+      "MF",
+      "CB",
+      "LB",
+      "RB"
+    ],
+    "Stats": {
+      "level": 3.4,
+      "stamina": 3.3,
+      "speed": 3.1
+    }
+  },
+  {
+    "Id": 4,
+    "Name": "Davide",
+    "Position": [
+      "DF",
+      "FW",
+      "CB",
+      "MF",
+      "LB",
+      "RB",
+      "RW",
+      "LW"
+    ],
+    "Stats": {
+      "level": 4.0,
+      "stamina": 3.5,
+      "speed": 4.4
+    }
+  },
+  {
+    "Id": 5,
+    "Name": "Juan Salamone",
+    "Position": [
+      "DF",
+      "MF",
+      "CB",
+      "LB",
+      "RB",
+      "RW",
+      "LW"
+    ],
+    "Stats": {
+      "level": 3.4,
+      "stamina": 3.5,
+      "speed": 3.1
+    }
+  },
+  {
+    "Id": 6,
+    "Name": "Pablo",
+    "Position": [
+      "DF",
+      "FW",
+      "MF",
+      "LB",
+      "RB",
+      "RW",
+      "LW"
+    ],
+    "Stats": {
+      "level": 4.1,
+      "stamina": 3.9,
+      "speed": 3.7
+    }
+  },
+  {
+    "Id": 7,
+    "Name": "Edu Ochoa",
+    "Position": [
+      "DF",
+      "MF",
+      "CB",
+      "LB",
+      "RB",
+      "LW"
+    ],
+    "Stats": {
+      "level": 2.8,
+      "stamina": 3.0,
+      "speed": 2.8
+    }
+  },
+  {
+    "Id": 8,
+    "Name": "Lucas FC",
+    "Position": [
+      "FW",
+      "CB",
+      "DF",
+      "MF"
+    ],
+    "Stats": {
+      "level": 3.9,
+      "stamina": 3.6,
+      "speed": 2.9
+    }
+  },
+  {
+    "Id": 9,
+    "Name": "Oscar Miercoles",
+    "Position": [
+      "MF",
+      "DF",
+      "LB",
+      "RB"
+    ],
+    "Stats": {
+      "level": 3.6,
+      "stamina": 2.8,
+      "speed": 2.6
+    }
+  },
+  {
+    "Id": 10,
+    "Name": "Rodri",
+    "Position": [
+      "MF",
+      "LB",
+      "RB",
+      "RW",
+      "LW"
+    ],
+    "Stats": {
+      "level": 3.7,
+      "stamina": 3.3,
+      "speed": 3.3
+    }
+  },
+  {
+    "Id": 11,
+    "Name": "Erik",
+    "Position": [
+      "DF",
+      "MF",
+      "RW",
+      "FW",
+      "LW"
+    ],
+    "Stats": {
+      "level": 4.8,
+      "stamina": 5.0,
+      "speed": 4.8
+    }
+  },
+  {
+    "Id": 12,
+    "Name": "Fran",
+    "Position": [
+      "CB",
+      "DF",
+      "LB",
+      "RB"
+    ],
+    "Stats": {
+      "level": 3.0,
+      "stamina": 2.2,
+      "speed": 1.8
+    }
+  },
+  {
+    "Id": 13,
+    "Name": "Nico Laderach",
+    "Position": [
+      "CB",
+      "DF",
+      "LB",
+      "RB"
+    ],
+    "Stats": {
+      "level": 3.5,
+      "stamina": 2.8,
+      "speed": 3.2
+    }
+  },
+  {
+    "Id": 14,
+    "Name": "Ricar",
+    "Position": [
+      "FW",
+      "GK",
+      "MF",
+      "CM"
+    ],
+    "Stats": {
+      "level": 3.8,
+      "stamina": 3.0,
+      "speed": 3.2
+    }
+  },
+  {
+    "Id": 15,
+    "Name": "Ale Masferrer",
+    "Position": [
+      "DF",
+      "MF",
+      "CB",
+      "LB",
+      "CM",
+      "RB",
+      "RW",
+      "LW"
+    ],
+    "Stats": {
+      "level": 4.0,
+      "stamina": 3.0,
+      "speed": 3.3
+    }
+  },
+  {
+    "Id": 16,
+    "Name": "Rick (Halcon)",
+    "Position": [
+      "MF",
+      "LB",
+      "CM",
+      "RB",
+      "FW"
+    ],
+    "Stats": {
+      "level": 2.5,
+      "stamina": 2.5,
+      "speed": 3.0
+    }
+  },
+  {
+    "Id": 17,
+    "Name": "Diyan",
+    "Position": [
+      "DF",
+      "MF",
+      "GK",
+      "RW",
+      "LW"
+    ],
+    "Stats": {
+      "level": 3.0,
+      "stamina": 3.0,
+      "speed": 3.0
+    }
+  },
+  {
+    "Id": 18,
+    "Name": "Dito",
+    "Position": [
+      "MF",
+      "FW",
+      "LW",
+      "RW",
+      "CM"
+    ],
+    "Stats": {
+      "level": 4.2,
+      "stamina": 3.3,
+      "speed": 3.0
+    }
+  },
+  {
+    "Id": 19,
+    "Name": "Leo",
+    "Position": [
+      "MF",
+      "FW",
+      "DF"
+    ],
+    "Stats": {
+      "level": 3.8,
+      "stamina": 3.5,
+      "speed": 3.5
+    }
+  },
+  {
+    "Id": 20,
+    "Name": "Miguel Escudero",
+    "Position": [
+      "MF",
+      "DF"
+    ],
+    "Stats": {
+      "level": 2.5,
+      "stamina": 2.0,
+      "speed": 3.0
+    }
+  },
+  {
+    "Id": 21,
+    "Name": "Victor Lopez",
+    "Position": [
+      "GK",
+      "DF",
+      "CB"
+    ],
+    "Stats": {
+      "level": 2.8,
+      "stamina": 2.4,
+      "speed": 1.8
+    }
+  },
+  {
+    "Id": 22,
+    "Name": "Roger",
+    "Position": [
+      "GK",
+      "DF",
+      "LW"
+    ],
+    "Stats": {
+      "level": 3.3,
+      "stamina": 3.0,
+      "speed": 3.0
+    }
+  },
+  {
+    "Id": 23,
+    "Name": "Isra",
+    "Position": [
+      "DF",
+      "LB",
+      "RB"
+    ],
+    "Stats": {
+      "level": 3.2,
+      "stamina": 2.5,
+      "speed": 2.5
+    }
+  },
+  {
+    "Id": 24,
+    "Name": "Salta",
+    "Position": [
+      "MF",
+      "FW",
+      "LW",
+      "RW",
+      "CM"
+    ],
+    "Stats": {
+      "level": 4.0,
+      "stamina": 4.0,
+      "speed": 3.8
+    }
+  },
+  {
+    "Id": 25,
+    "Name": "Emmanuel",
+    "Position": [
+      "MF",
+      "FW",
+      "LW",
+      "RW",
+      "CM"
+    ],
+    "Stats": {
+      "level": 1.5,
+      "stamina": 2.0,
+      "speed": 2.8
+    }
+  },
+  {
+    "Id": 26,
+    "Name": "Jose Luis (hermano Gabo)",
+    "Position": [
+      "DF",
+      "MF",
+      "CM",
+      "CB"
+    ],
+    "Stats": {
+      "level": 3.0,
+      "stamina": 2.5,
+      "speed": 2.5
+    }
+  },
+  {
+    "Id": 27,
+    "Name": "Jose Luis (papa Gabo)",
+    "Position": [
+      "GK",
+      "DF",
+      "CB"
+    ],
+    "Stats": {
+      "level": 3.0,
+      "stamina": 2.75,
+      "speed": 2.5
+    }
+  }
+]
