@@ -446,5 +446,24 @@
       "stamina": 2.67,
       "speed": 3.17
     }
+  },
+  {
+    "Id": 29,
+    "Name": "Tomasso",
+    "Position": [
+      "FW",
+      "LW",
+      "RW",
+      "DF",
+      "CB",
+      "LB",
+      "RB",
+      "CM"
+    ],
+    "Stats": {
+      "level": 2.6,
+      "stamina": 2.4,
+      "speed": 2.4
+    }
   }
 ]
