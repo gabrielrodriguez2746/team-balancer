@@ -1,5 +1,6 @@
 {
   "team_size": 6,
+  "num_teams": 2,
   "top_n_teams": 3,
   "diversity_threshold": 3.0,
   "must_be_on_different_teams": [

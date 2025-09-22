@@ -13,6 +13,7 @@ class AppConfig:
     
     # Team settings
     team_size: int = 6
+    num_teams: int = 2  # NEW: Number of teams to generate
     top_n_teams: int = 3
     diversity_threshold: float = 3.0
     
@@ -45,6 +46,7 @@ class AppConfig:
         """Convert to dictionary for serialization"""
         return {
             "team_size": self.team_size,
+            "num_teams": self.num_teams,  # Include num_teams in serialization
             "top_n_teams": self.top_n_teams,
             "diversity_threshold": self.diversity_threshold,
             "must_be_on_different_teams": self.must_be_on_different_teams,

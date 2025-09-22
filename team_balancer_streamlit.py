@@ -12,6 +12,7 @@ from typing import List, Dict, Optional, Tuple
 import json
 import os
 from datetime import datetime
+import numpy as np # Added for standard deviation calculation
 
 # Import existing modules
 from team_balancer import TeamBalancer, PlayerRegistry, Player, PlayerStats, Position, TeamBalancerConfig
@@ -573,36 +574,67 @@ class StreamlitTeamBalancerUI:
         
         with col1:
             st.markdown("### ⚙️ Team Configuration")
-            # Calculate optimal team size based on selected players
+            
+            # Number of teams selector
             selected_count = len(st.session_state.selected_players)
             if selected_count >= 4:
-                optimal_team_size = selected_count // 2
-                if selected_count % 2 != 0:
-                    optimal_team_size = (selected_count - 1) // 2
-                st.info(f"📊 Optimal team size: {optimal_team_size} (for {selected_count} players)")
+                max_possible_teams = min(6, selected_count // 2)  # Max 6 teams, min 2 players per team
+                min_teams = 2
+                
+                if max_possible_teams >= min_teams:
+                    num_teams = st.slider(
+                        "Number of Teams", 
+                        min_value=min_teams, 
+                        max_value=max_possible_teams, 
+                        value=min(2, max_possible_teams),
+                        help="Choose how many teams to generate"
+                    )
+                    st.session_state.num_teams = num_teams
+                else:
+                    num_teams = 2
+                    st.session_state.num_teams = num_teams
+                    st.info(f"🔢 Number of teams: {num_teams} (automatically set)")
+            else:
+                num_teams = 2
+                st.session_state.num_teams = num_teams
+                st.info("🔢 Select at least 4 players to configure teams")
+            
+            # Calculate optimal team size based on selected players and number of teams
+            if selected_count >= 4:
+                optimal_team_size = selected_count // num_teams
+                leftover_players = selected_count % num_teams
+                
+                if leftover_players > 0:
+                    st.info(f"📊 Optimal team size: {optimal_team_size} ({leftover_players} players will be excluded)")
+                else:
+                    st.info(f"📊 Optimal team size: {optimal_team_size} (perfect distribution)")
             else:
                 st.info("📊 Select at least 4 players to see team size")
             
             # Show team size slider only when enough players are selected
             if selected_count >= 4:
                 # Calculate valid min and max values for slider
-                min_team_size = 2
-                max_team_size = min(6, selected_count // 2)
+                min_team_size = max(1, (selected_count - num_teams) // num_teams)  # Minimum viable team size
+                max_team_size = min(8, selected_count // num_teams)  # Maximum reasonable team size
                 
-                # Ensure min < max for slider
-                if min_team_size >= max_team_size:
+                # Ensure min <= max for slider
+                if min_team_size <= max_team_size and max_team_size > 0:
+                    team_size = st.slider(
+                        "Team Size", 
+                        min_value=min_team_size, 
+                        max_value=max_team_size, 
+                        value=max_team_size,
+                        help="Size of each team"
+                    )
+                    st.session_state.team_size = team_size
+                    required_players = team_size * num_teams
+                    st.info(f"Required players: {required_players} ({num_teams} teams × {team_size} players)")
+                else:
                     # If we can't create a valid slider, just show the calculated team size
-                    calculated_team_size = max_team_size
+                    calculated_team_size = max(1, selected_count // num_teams)
                     st.info(f"📏 Team size: {calculated_team_size} (automatically calculated)")
                     st.session_state.team_size = calculated_team_size
-                    required_players = calculated_team_size * 2
-                else:
-                    # Create slider with valid min/max values
-                    team_size = st.slider("Team Size", min_team_size, max_team_size, 
-                                         value=max_team_size)
-                    st.session_state.team_size = team_size
-                    required_players = team_size * 2
-                    st.info(f"Required players: {required_players}")
+                    required_players = calculated_team_size * num_teams
             else:
                 st.session_state.team_size = 0
                 required_players = 0
@@ -803,16 +835,24 @@ class StreamlitTeamBalancerUI:
             selected_players = [p for p in self.player_registry.get_all_players() 
                               if p.player_id in st.session_state.selected_players]
             
-            if len(selected_players) < 4:
-                st.error("Need at least 4 players to form teams.")
+            # Get team configuration from session state
+            num_teams = st.session_state.get('num_teams', 2)
+            team_size = st.session_state.get('team_size', len(selected_players) // num_teams)
+            
+            # Validate minimum players
+            min_players = num_teams * 2
+            if len(selected_players) < min_players:
+                st.error(f"Need at least {min_players} players to form {num_teams} teams.")
                 return
             
-            # Calculate actual team size based on available players
-            actual_team_size = len(selected_players) // 2
-            if len(selected_players) % 2 != 0:
-                actual_team_size = (len(selected_players) - 1) // 2
+            # Calculate actual team size based on available players and number of teams
+            actual_team_size = len(selected_players) // num_teams
+            leftover_players = len(selected_players) % num_teams
             
-            st.info(f"📊 Forming teams of {actual_team_size} players from {len(selected_players)} selected players")
+            if leftover_players > 0:
+                st.info(f"📊 Forming {num_teams} teams of {actual_team_size} players each from {len(selected_players)} selected players ({leftover_players} players will be excluded)")
+            else:
+                st.info(f"📊 Forming {num_teams} teams of {actual_team_size} players each from {len(selected_players)} selected players")
             
             # Prepare constraints
             together_constraints = []
@@ -848,6 +888,7 @@ class StreamlitTeamBalancerUI:
             # Create new team balancer config with dynamic team size and constraints
             dynamic_config = TeamBalancerConfig(
                 team_size=actual_team_size,
+                num_teams=num_teams,  # Use configured number of teams
                 top_n_teams=self.config.top_n_teams,
                 diversity_threshold=self.config.diversity_threshold,
                 must_be_on_different_teams=separate_constraints,  # Use dynamic separate constraints
@@ -909,17 +950,14 @@ class StreamlitTeamBalancerUI:
                 print(f"\n🎯 COMBINATION #{i+1} (Balance Score: {combination.balance.total_balance_score:.2f})")
                 print("-" * 60)
                 
-                # Team 1
-                team1_total = sum(p.stats.level + p.stats.stamina + p.stats.speed for p in combination.team1)
-                print(f"🔵 TEAM 1 (Total: {team1_total:.1f})")
-                for player in combination.team1:
-                    print(f"   • {player.name} (Level: {player.stats.level}, Pos: {', '.join([pos.value for pos in player.positions])})")
-                
-                # Team 2
-                team2_total = sum(p.stats.level + p.stats.stamina + p.stats.speed for p in combination.team2)
-                print(f"\n🔴 TEAM 2 (Total: {team2_total:.1f})")
-                for player in combination.team2:
-                    print(f"   • {player.name} (Level: {player.stats.level}, Pos: {', '.join([pos.value for pos in player.positions])})")
+                # Display all teams
+                team_colors = ["🔵", "🔴", "🟢", "🟡", "🟣", "🟠"]  # Colors for up to 6 teams
+                for team_idx, team in enumerate(combination.teams):
+                    color = team_colors[team_idx % len(team_colors)]
+                    team_total = sum(p.stats.level + p.stats.stamina + p.stats.speed for p in team)
+                    print(f"\n{color} TEAM {team_idx + 1} (Total: {team_total:.1f})")
+                    for player in team:
+                        print(f"   • {player.name} (Level: {player.stats.level}, Pos: {', '.join([pos.value for pos in player.positions])})")
                 
                 print("-" * 60)
             
@@ -977,64 +1015,65 @@ class StreamlitTeamBalancerUI:
                 
                 # Display detailed stats only if enabled
                 if show_stats:
-                    col1, col2 = st.columns(2)
+                    # Create columns for each team
+                    num_teams = len(combination.teams)
+                    team_columns = st.columns(num_teams)
                     
-                    with col1:
-                        st.markdown("**Team A:**")
-                        team_a_players = []
-                        for player in combination.team1:
-                            team_a_players.append({
-                                'Name': player.name,
-                                'Level': player.stats.level,
-                                'Stamina': player.stats.stamina,
-                                'Speed': player.stats.speed,
-                                'Total': player.stats.level + player.stats.stamina + player.stats.speed
+                    team_totals = []
+                    team_averages = []
+                    
+                    for team_idx, (col, team) in enumerate(zip(team_columns, combination.teams)):
+                        with col:
+                            st.markdown(f"**Team {team_idx + 1}:**")
+                            team_players = []
+                            for player in team:
+                                team_players.append({
+                                    'Name': player.name,
+                                    'Level': player.stats.level,
+                                    'Stamina': player.stats.stamina,
+                                    'Speed': player.stats.speed,
+                                    'Total': player.stats.level + player.stats.stamina + player.stats.speed
+                                })
+                            
+                            team_df = pd.DataFrame(team_players)
+                            st.dataframe(team_df, use_container_width=True, hide_index=True)
+                            
+                            # Team stats
+                            team_avg_level = team_df['Level'].mean()
+                            team_avg_stamina = team_df['Stamina'].mean()
+                            team_avg_speed = team_df['Speed'].mean()
+                            team_total = team_df['Total'].sum()
+                            
+                            team_totals.append(team_total)
+                            team_averages.append({
+                                'level': team_avg_level,
+                                'stamina': team_avg_stamina,
+                                'speed': team_avg_speed
                             })
-                        
-                        team_a_df = pd.DataFrame(team_a_players)
-                        st.dataframe(team_a_df, use_container_width=True, hide_index=True)
-                        
-                        # Team A stats
-                        team_a_avg_level = team_a_df['Level'].mean()
-                        team_a_avg_stamina = team_a_df['Stamina'].mean()
-                        team_a_avg_speed = team_a_df['Speed'].mean()
-                        team_a_total = team_a_df['Total'].sum()
-                        
-                        st.metric("Team A Total Stats", f"{team_a_total:.1f}")
+                            
+                            st.metric(f"Team {team_idx + 1} Total", f"{team_total:.1f}")
                     
-                    with col2:
-                        st.markdown("**Team B:**")
-                        team_b_players = []
-                        for player in combination.team2:
-                            team_b_players.append({
-                                'Name': player.name,
-                                'Level': player.stats.level,
-                                'Stamina': player.stats.stamina,
-                                'Speed': player.stats.speed,
-                                'Total': player.stats.level + player.stats.stamina + player.stats.speed
-                            })
+                    # Balance comparison for multiple teams
+                    if num_teams > 1:
+                        st.markdown("### ⚖️ Balance Comparison")
                         
-                        team_b_df = pd.DataFrame(team_b_players)
-                        st.dataframe(team_b_df, use_container_width=True, hide_index=True)
+                        # Calculate standard deviations for each stat
+                        level_values = [avg['level'] for avg in team_averages]
+                        stamina_values = [avg['stamina'] for avg in team_averages]
+                        speed_values = [avg['speed'] for avg in team_averages]
                         
-                        # Team B stats
-                        team_b_avg_level = team_b_df['Level'].mean()
-                        team_b_avg_stamina = team_b_df['Stamina'].mean()
-                        team_b_avg_speed = team_b_df['Speed'].mean()
-                        team_b_total = team_b_df['Total'].sum()
+                        level_std = np.std(level_values) if len(level_values) > 1 else 0
+                        stamina_std = np.std(stamina_values) if len(stamina_values) > 1 else 0
+                        speed_std = np.std(speed_values) if len(speed_values) > 1 else 0
                         
-                        st.metric("Team B Total Stats", f"{team_b_total:.1f}")
-                    
-                    # Balance comparison
-                    st.markdown("### ⚖️ Balance Comparison")
-                    col1, col2, col3 = st.columns(3)
-                    
-                    with col1:
-                        st.metric("Level Difference", f"{abs(team_a_avg_level - team_b_avg_level):.2f}")
-                    with col2:
-                        st.metric("Stamina Difference", f"{abs(team_a_avg_stamina - team_b_avg_stamina):.2f}")
-                    with col3:
-                        st.metric("Speed Difference", f"{abs(team_a_avg_speed - team_b_avg_speed):.2f}")
+                        col1, col2, col3 = st.columns(3)
+                        
+                        with col1:
+                            st.metric("Level Balance", f"{level_std:.2f}", help="Lower is better balanced")
+                        with col2:
+                            st.metric("Stamina Balance", f"{stamina_std:.2f}", help="Lower is better balanced")
+                        with col3:
+                            st.metric("Speed Balance", f"{speed_std:.2f}", help="Lower is better balanced")
         
         # Export results
         st.markdown("### 📤 Export Results")
@@ -1059,31 +1098,32 @@ class StreamlitTeamBalancerUI:
         import plotly.graph_objects as go
         import plotly.express as px
         
-        # Create data for both teams
-        team_a_data = []
-        team_b_data = []
+        # Create data for all teams
+        teams_data = []
+        num_teams = len(combination.teams)
         
-        for player in combination.team1:
-            team_a_data.append({
-                'Player': player.name
-            })
-        
-        for player in combination.team2:
-            team_b_data.append({
-                'Player': player.name
-            })
+        for team_idx, team in enumerate(combination.teams):
+            team_data = []
+            for player in team:
+                team_data.append({
+                    'Player': player.name
+                })
+            teams_data.append(team_data)
         
         # Calculate team totals (only for display if stats are enabled)
+        team_totals = []
         if show_stats:
-            team_a_total_level = sum(p.stats.level for p in combination.team1)
-            team_a_total_stamina = sum(p.stats.stamina for p in combination.team1)
-            team_a_total_speed = sum(p.stats.speed for p in combination.team1)
-            team_a_grand_total = team_a_total_level + team_a_total_stamina + team_a_total_speed
-            
-            team_b_total_level = sum(p.stats.level for p in combination.team2)
-            team_b_total_stamina = sum(p.stats.stamina for p in combination.team2)
-            team_b_total_speed = sum(p.stats.speed for p in combination.team2)
-            team_b_grand_total = team_b_total_level + team_b_total_stamina + team_b_total_speed
+            for team in combination.teams:
+                team_total_level = sum(p.stats.level for p in team)
+                team_total_stamina = sum(p.stats.stamina for p in team)
+                team_total_speed = sum(p.stats.speed for p in team)
+                team_grand_total = team_total_level + team_total_stamina + team_total_speed
+                team_totals.append({
+                    'level': team_total_level,
+                    'stamina': team_total_stamina,
+                    'speed': team_total_speed,
+                    'grand_total': team_grand_total
+                })
         
         # Create table using plotly
         fig = go.Figure()
@@ -1092,101 +1132,83 @@ class StreamlitTeamBalancerUI:
         header_values = ['Player']
         
         # Prepare data for side-by-side display
-        # Pad the shorter team with empty rows to match the longer team
-        max_rows = max(len(team_a_data), len(team_b_data))
+        # Pad all teams with empty rows to match the longest team
+        max_rows = max(len(team_data) for team_data in teams_data) if teams_data else 0
         
-        # Pad team A data
-        while len(team_a_data) < max_rows:
-            team_a_data.append({col: '' for col in header_values})
-        
-        # Pad team B data
-        while len(team_b_data) < max_rows:
-            team_b_data.append({col: '' for col in header_values})
+        for team_data in teams_data:
+            while len(team_data) < max_rows:
+                team_data.append({col: '' for col in header_values})
         
         # Create combined header with team labels
-        team_a_header = ['TEAM A'] + [''] * (len(header_values) - 1)
-        team_b_header = ['TEAM B'] + [''] * (len(header_values) - 1)
-        combined_header = team_a_header + [''] + team_b_header  # Empty column as separator
+        combined_header = []
+        for team_idx in range(num_teams):
+            team_header = [f'TEAM {team_idx + 1}'] + [''] * (len(header_values) - 1)
+            combined_header.extend(team_header)
+            if team_idx < num_teams - 1:  # Add separator between teams
+                combined_header.append('')
         
         # Create combined data rows
-        combined_values = []
-        for i in range(max_rows):
-            row = []
-            # Team A data
-            for col in header_values:
-                row.append(team_a_data[i][col])
-            # Separator
-            row.append('')
-            # Team B data
-            for col in header_values:
-                row.append(team_b_data[i][col])
-            combined_values.append(row)
+        combined_data = []
+        for row_idx in range(max_rows):
+            row_data = []
+            for team_idx, team_data in enumerate(teams_data):
+                for col in header_values:
+                    row_data.append(team_data[row_idx][col])
+                if team_idx < num_teams - 1:  # Add separator between teams
+                    row_data.append('')
+            combined_data.append(row_data)
         
-        # Transpose for plotly table format
-        table_data = list(zip(*combined_values))
+        # Transpose data for plotly table
+        table_data = list(zip(*combined_data)) if combined_data else []
         
-        # Create table with team labels and column headers (larger fonts for better visibility)
+        # Create alternating colors for teams
+        team_colors = ['#E3F2FD', '#FFEBEE', '#E8F5E8', '#FFF3E0', '#F3E5F5', '#E0F2F1']
+        cell_colors = []
+        for team_idx in range(num_teams):
+            color = team_colors[team_idx % len(team_colors)]
+            cell_colors.extend([color] * len(header_values))
+            if team_idx < num_teams - 1:  # Add separator color
+                cell_colors.append('#FFFFFF')
+        
+        # Add table to figure
         fig.add_trace(go.Table(
             header=dict(
                 values=combined_header,
-                fill_color=['lightcoral'] * len(header_values) + ['white'] + ['lightblue'] * len(header_values),
+                fill_color='#1f77b4',
+                font=dict(color='white', size=14, family='Arial Black'),
                 align='center',
-                font=dict(size=24, color='white', weight='bold')
+                height=40
             ),
             cells=dict(
                 values=table_data,
-                fill_color=['lightcoral'] * len(header_values) + ['white'] + ['lightblue'] * len(header_values),
+                fill_color=[cell_colors * max_rows] if cell_colors else [],
+                font=dict(size=12, family='Arial'),
                 align='center',
-                font=dict(size=18, color='black'),
-                height=50
-            ),
-            columnwidth=[2] * len(header_values) + [0.5] + [2] * len(header_values)
+                height=35
+            )
         ))
         
-        # No need for column headers since we only have player names
-        
-        # Update layout for image export (larger size for Google Forms)
+        # Update layout
         fig.update_layout(
-            title=dict(
-                text=f"Team Combination {combination_number} - Balance Score: {combination.balance.total_balance_score:.2f}",
-                x=0.5,
-                xanchor='center',
-                font=dict(size=20, color='black', family="Arial, sans-serif")
-            ),
-            width=1600,
-            height=800,
-            margin=dict(l=80, r=80, t=100, b=80),
-            font=dict(family="Arial, sans-serif"),
-            plot_bgcolor='white',
-            paper_bgcolor='white'
+            title=f"Team Combination {combination_number}",
+            title_x=0.5,
+            width=min(800, 200 * num_teams),  # Adjust width based on number of teams
+            height=50 + max_rows * 35,
+            margin=dict(l=0, r=0, t=50, b=0),
+            font=dict(family="Arial", size=12)
         )
         
-        # Display the table
         st.plotly_chart(fig, use_container_width=True)
         
-        # Add team totals below the table (only if stats are enabled)
-        if show_stats:
-            col1, col2 = st.columns(2)
+        # Display team stats summary if enabled
+        if show_stats and team_totals:
+            st.markdown("#### Team Statistics Summary")
+            stats_cols = st.columns(num_teams)
             
-            with col1:
-                st.markdown("**Team A Totals:**")
-                st.metric("Total Level", f"{team_a_total_level:.1f}")
-                st.metric("Total Stamina", f"{team_a_total_stamina:.1f}")
-                st.metric("Total Speed", f"{team_a_total_speed:.1f}")
-                st.metric("Grand Total", f"{team_a_grand_total:.1f}", delta=f"{team_a_grand_total - team_b_grand_total:.1f}")
-            
-            with col2:
-                st.markdown("**Team B Totals:**")
-                st.metric("Total Level", f"{team_b_total_level:.1f}")
-                st.metric("Total Stamina", f"{team_b_total_stamina:.1f}")
-                st.metric("Total Speed", f"{team_b_total_speed:.1f}")
-                st.metric("Grand Total", f"{team_b_grand_total:.1f}", delta=f"{team_b_grand_total - team_a_grand_total:.1f}")
-        
-        # Add export instructions
-        st.info("💡 **Export as Image**: Right-click on the table above and select 'Save image as...' to export this combination as an image file.")
-        
-        # Show player count info
-        st.success(f"📊 **Team Balance**: {len(combination.team1)} players vs {len(combination.team2)} players")
+            for team_idx, (col, totals) in enumerate(zip(stats_cols, team_totals)):
+                with col:
+                    st.metric(f"Team {team_idx + 1} Total", f"{totals['grand_total']:.1f}")
+                    st.caption(f"Level: {totals['level']:.1f} | Stamina: {totals['stamina']:.1f} | Speed: {totals['speed']:.1f}")
 
     def _display_soccer_field(self, combination, combination_number, show_stats=False):
         """Display teams on a soccer field visualization"""

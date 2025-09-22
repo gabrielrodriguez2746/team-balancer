@@ -1109,12 +1109,13 @@ class ModernTeamBalancerUI:
         if self.is_loading:
             return
         
-        # Get team size
+        # Get team size and number of teams (defaulting to 2 for backwards compatibility)
         team_size = self.team_size_var.get()
-        required_players = team_size * 2
+        num_teams = 2  # For now, keep Tkinter UI at 2 teams for simplicity
+        required_players = team_size * num_teams
         
         if len(self.selected_players) < required_players:
-            messagebox.showwarning("Warning", f"Please select at least {required_players} players")
+            messagebox.showwarning("Warning", f"Please select at least {required_players} players for {num_teams} teams")
             return
         
         def generate_operation():
@@ -1134,20 +1135,19 @@ class ModernTeamBalancerUI:
         result_text = "Generated Teams:\n" + "="*50 + "\n\n"
         
         for i, combination in enumerate(combinations[:3], 1):  # Show top 3
-            result_text += f"Option {i}\n"
-            result_text += f"Team 1:\n"
+            result_text += f"Option {i} (Balance Score: {combination.balance.total_balance_score:.2f})\n"
             
-            for j, player in enumerate(combination.team1, 1):
-                positions_str = ", ".join(pos.value for pos in player.positions)
-                result_text += f"{j}. {player.name} ({positions_str})\n"
+            # Display all teams dynamically
+            for team_idx, team in enumerate(combination.teams, 1):
+                result_text += f"Team {team_idx}:\n"
+                
+                for j, player in enumerate(team, 1):
+                    positions_str = ", ".join(pos.value for pos in player.positions)
+                    result_text += f"{j}. {player.name} ({positions_str})\n"
+                
+                result_text += "\n"
             
-            result_text += f"\nTeam 2:\n"
-            
-            for j, player in enumerate(combination.team2, 1):
-                positions_str = ", ".join(pos.value for pos in player.positions)
-                result_text += f"{j}. {player.name} ({positions_str})\n"
-            
-            result_text += "\n" + "="*50 + "\n\n"
+            result_text += "="*50 + "\n\n"
         
         self.results_text.insert(1.0, result_text)
     

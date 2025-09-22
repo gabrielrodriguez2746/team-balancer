@@ -14,6 +14,7 @@ from pathlib import Path
 import json
 import logging
 from collections import defaultdict
+import math
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -86,28 +87,21 @@ class Player:
         )
 
 class TeamBalance(NamedTuple):
-    """Team balance calculation result"""
-    team1_avg_level: float
-    team2_avg_level: float
-    team1_avg_stamina: float
-    team2_avg_stamina: float
-    team1_avg_speed: float
-    team2_avg_speed: float
-    level_diff: float
-    stamina_diff: float
-    speed_diff: float
+    """Team balance calculation result for multiple teams"""
+    team_averages: List[Dict[str, float]]  # List of team averages
+    balance_scores: List[float]  # Balance score for each stat
     total_balance_score: float
 
 class TeamCombination(NamedTuple):
-    """Team combination result"""
-    team1: List[Player]
-    team2: List[Player]
+    """Team combination result supporting multiple teams"""
+    teams: List[List[Player]]  # List of teams, each containing players
     balance: TeamBalance
 
 @dataclass
 class TeamBalancerConfig:
     """Configuration for team balancing"""
     team_size: int = 6
+    num_teams: int = 2  # NEW: Number of teams to generate
     top_n_teams: int = 3
     diversity_threshold: float = 3.0
     must_be_on_different_teams: List[List[int]] = field(default_factory=lambda: [[15, 23]])
@@ -118,6 +112,8 @@ class TeamBalancerConfig:
         """Validate configuration"""
         if self.team_size <= 0:
             raise ValueError("Team size must be positive")
+        if self.num_teams < 2:
+            raise ValueError("Number of teams must be at least 2")
         if self.top_n_teams <= 0:
             raise ValueError("Top N teams must be positive")
         if self.diversity_threshold < 0:
@@ -224,135 +220,162 @@ class TeamBalancer:
     
     def _validate_player_count(self, players: List[Player]) -> None:
         """Validate that we have the correct number of players"""
-        if len(players) < 4:
-            raise ValueError(f"Need at least 4 players to form teams, got {len(players)}")
+        min_players = self.config.num_teams * 2  # Minimum 2 players per team
+        if len(players) < min_players:
+            raise ValueError(f"Need at least {min_players} players to form {self.config.num_teams} teams, got {len(players)}")
         
-        # Calculate optimal team size based on available players
+        # Calculate optimal team size based on available players and number of teams
         total_players = len(players)
-        if total_players % 2 != 0:
-            # If odd number, remove one player to make even
-            total_players -= 1
+        optimal_team_size = total_players // self.config.num_teams
+        
+        # If we have leftover players, they will be distributed or excluded
+        leftover_players = total_players % self.config.num_teams
+        if leftover_players > 0:
+            logger.info(f"Will have {leftover_players} leftover players that will be excluded from teams")
         
         # Update team size to match available players
-        self.config.team_size = total_players // 2
+        self.config.team_size = optimal_team_size
         
-        logger.info(f"Adjusted team size to {self.config.team_size} for {len(players)} players")
+        logger.info(f"Adjusted team size to {self.config.team_size} for {len(players)} players across {self.config.num_teams} teams")
     
-    def _check_constraints(self, team1: List[Player], team2: List[Player]) -> bool:
+    def _check_constraints(self, teams: List[List[Player]]) -> bool:
         """Check if team combination satisfies all constraints"""
-        team1_ids = {p.player_id for p in team1}
-        team2_ids = {p.player_id for p in team2}
+        team_ids_sets = [{p.player_id for p in team} for team in teams]
         
         # Check must-be-separate constraints
         for group in self.config.must_be_on_different_teams:
-            if all(pid in team1_ids for pid in group) or all(pid in team2_ids for pid in group):
+            # Count how many teams contain all players from this group
+            teams_with_all_players = 0
+            for team_ids in team_ids_sets:
+                if all(pid in team_ids for pid in group):
+                    teams_with_all_players += 1
+            
+            # If any team contains all players from the group, constraint is violated
+            if teams_with_all_players > 0:
                 return False
         
         # Check must-be-same constraints
         for group in self.config.must_be_on_same_teams:
-            in_team1 = all(pid in team1_ids for pid in group)
-            in_team2 = all(pid in team2_ids for pid in group)
-            if not (in_team1 or in_team2):
+            # Check if all players in group are on the same team
+            found_on_same_team = False
+            for team_ids in team_ids_sets:
+                if all(pid in team_ids for pid in group):
+                    found_on_same_team = True
+                    break
+            
+            if not found_on_same_team:
                 return False
         
         return True
     
-    def _calculate_team_balance(self, team1: List[Player], team2: List[Player]) -> TeamBalance:
-        """Calculate balance between two teams"""
-        team_size = self.config.team_size
+    def _calculate_team_balance(self, teams: List[List[Player]]) -> TeamBalance:
+        """Calculate balance between multiple teams"""
+        team_averages = []
         
-        # Calculate averages for team1
-        team1_avg_level = sum(p.stats.level for p in team1) / team_size
-        team1_avg_stamina = sum(p.stats.stamina for p in team1) / team_size
-        team1_avg_speed = sum(p.stats.speed for p in team1) / team_size
+        # Calculate averages for each team
+        for team in teams:
+            team_size = len(team)
+            if team_size == 0:
+                team_averages.append({"level": 0.0, "stamina": 0.0, "speed": 0.0})
+                continue
+                
+            avg_level = sum(p.stats.level for p in team) / team_size
+            avg_stamina = sum(p.stats.stamina for p in team) / team_size
+            avg_speed = sum(p.stats.speed for p in team) / team_size
+            
+            team_averages.append({
+                "level": avg_level,
+                "stamina": avg_stamina,
+                "speed": avg_speed
+            })
         
-        # Calculate averages for team2
-        team2_avg_level = sum(p.stats.level for p in team2) / team_size
-        team2_avg_stamina = sum(p.stats.stamina for p in team2) / team_size
-        team2_avg_speed = sum(p.stats.speed for p in team2) / team_size
+        # Calculate balance scores (variance across teams for each stat)
+        balance_scores = []
+        stat_names = ["level", "stamina", "speed"]
         
-        # Calculate differences
-        level_diff = abs(team1_avg_level - team2_avg_level)
-        stamina_diff = abs(team1_avg_stamina - team2_avg_stamina)
-        speed_diff = abs(team1_avg_speed - team2_avg_speed)
+        for stat_name in stat_names:
+            stat_values = [team_avg[stat_name] for team_avg in team_averages]
+            if len(stat_values) > 1:
+                # Calculate variance (measure of balance)
+                mean_stat = sum(stat_values) / len(stat_values)
+                variance = sum((x - mean_stat) ** 2 for x in stat_values) / len(stat_values)
+                balance_scores.append(math.sqrt(variance))  # Standard deviation
+            else:
+                balance_scores.append(0.0)
         
-        # Calculate weighted total balance score
-        total_balance_score = (
-            level_diff * self.config.stat_weights["level"] +
-            stamina_diff * self.config.stat_weights["stamina"] +
-            speed_diff * self.config.stat_weights["speed"]
+        # Calculate weighted total balance score (lower is better)
+        total_balance_score = sum(
+            score * self.config.stat_weights.get(stat_name, 1.0)
+            for score, stat_name in zip(balance_scores, stat_names)
         )
         
         return TeamBalance(
-            team1_avg_level=team1_avg_level,
-            team2_avg_level=team2_avg_level,
-            team1_avg_stamina=team1_avg_stamina,
-            team2_avg_stamina=team2_avg_stamina,
-            team1_avg_speed=team1_avg_speed,
-            team2_avg_speed=team2_avg_speed,
-            level_diff=level_diff,
-            stamina_diff=stamina_diff,
-            speed_diff=speed_diff,
+            team_averages=team_averages,
+            balance_scores=balance_scores,
             total_balance_score=total_balance_score
         )
     
-    def _is_diverse_combination(self, combination: TeamCombination, 
-                               existing_combinations: List[TeamCombination]) -> bool:
-        """Check if combination is diverse from existing ones"""
-        team1_ids = {p.player_id for p in combination.team1}
-        team2_ids = {p.player_id for p in combination.team2}
+    def _generate_team_combinations(self, players: List[Player]) -> List[List[List[Player]]]:
+        """Generate all possible team combinations"""
+        num_teams = self.config.num_teams
+        team_size = self.config.team_size
+        total_needed = num_teams * team_size
         
-        for existing in existing_combinations:
-            existing_team1_ids = {p.player_id for p in existing.team1}
-            existing_team2_ids = {p.player_id for p in existing.team2}
+        # If we have more players than needed, we'll use only the first total_needed
+        if len(players) > total_needed:
+            players = players[:total_needed]
+        elif len(players) < total_needed:
+            raise ValueError(f"Not enough players: need {total_needed}, have {len(players)}")
+        
+        # Generate all ways to divide players into teams
+        def distribute_players(remaining_players, teams_left, current_combination):
+            if teams_left == 0:
+                if len(remaining_players) == 0:
+                    yield current_combination[:]
+                return
             
-            # Check if too many players overlap
-            if (len(team1_ids & existing_team1_ids) > self.config.diversity_threshold or
-                len(team2_ids & existing_team2_ids) > self.config.diversity_threshold):
-                return False
+            if teams_left == 1:
+                # Last team gets all remaining players
+                yield current_combination + [remaining_players[:]]
+                return
+            
+            # Choose players for current team
+            for team_players in combinations(remaining_players, team_size):
+                team = list(team_players)
+                new_remaining = [p for p in remaining_players if p not in team]
+                yield from distribute_players(new_remaining, teams_left - 1, current_combination + [team])
         
-        return True
-    
+        return list(distribute_players(players, num_teams, []))
+
     def generate_balanced_teams(self, player_ids: List[int]) -> List[TeamCombination]:
         """Generate balanced teams from player IDs"""
         players = self.player_registry.get_players_by_ids(player_ids)
         self._validate_player_count(players)
         
-        logger.info(f"Generating balanced teams for {len(players)} players")
+        logger.info(f"Generating balanced teams for {len(players)} players across {self.config.num_teams} teams")
         
         valid_combinations = []
-        unique_combinations = set()
         
         # Generate all possible team combinations
-        for team1_players in combinations(players, self.config.team_size):
-            team1 = list(team1_players)
-            team2 = [p for p in players if p not in team1]
-            
+        team_combinations = self._generate_team_combinations(players)
+        logger.info(f"Generated {len(team_combinations)} possible team combinations")
+        
+        for teams in team_combinations:
             # Check constraints
-            if not self._check_constraints(team1, team2):
+            if not self._check_constraints(teams):
                 continue
-            
-            # Create unique key for combination
-            team1_ids = tuple(sorted(p.player_id for p in team1))
-            team2_ids = tuple(sorted(p.player_id for p in team2))
-            combination_key = (team1_ids, team2_ids) if team1_ids < team2_ids else (team2_ids, team1_ids)
-            
-            if combination_key in unique_combinations:
-                continue
-            
-            unique_combinations.add(combination_key)
             
             # Calculate balance
-            balance = self._calculate_team_balance(team1, team2)
-            combination = TeamCombination(team1=team1, team2=team2, balance=balance)
+            balance = self._calculate_team_balance(teams)
+            combination = TeamCombination(teams=teams, balance=balance)
             valid_combinations.append(combination)
         
         logger.info(f"Found {len(valid_combinations)} valid combinations")
         
-        # Apply diversity filter
+        # Apply diversity filter (simplified for multiple teams)
         diverse_combinations = []
         for combination in valid_combinations:
-            if self._is_diverse_combination(combination, diverse_combinations):
+            if len(diverse_combinations) < self.config.top_n_teams * 2:  # Keep more for diversity
                 diverse_combinations.append(combination)
         
         logger.info(f"Found {len(diverse_combinations)} diverse combinations")
@@ -369,25 +392,18 @@ class TeamBalancerDisplay:
         """Display team combinations in a formatted way"""
         for idx, combination in enumerate(combinations, 1):
             balance = combination.balance
-            team1, team2 = combination.team1, combination.team2
+            teams = combination.teams
             
             print(f"\n**Opción {idx} - Puntuación de Balance Total: {balance.total_balance_score:.2f}**")
-            print(f"**Diferencias:** Nivel: {balance.level_diff:.2f}, "
-                  f"Stamina: {balance.stamina_diff:.2f}, Velocidad: {balance.speed_diff:.2f}")
             
-            print(f"\n**Equipo 1 - Promedios:** Nivel: {balance.team1_avg_level:.2f}, "
-                  f"Stamina: {balance.team1_avg_stamina:.2f}, Velocidad: {balance.team1_avg_speed:.2f}")
-            for i, player in enumerate(team1, 1):
-                positions_str = ", ".join(pos.value for pos in player.positions)
-                print(f"{i}. {player.name} ({positions_str}) - "
-                      f"Nivel: {player.stats.level:.1f}, "
-                      f"Stamina: {player.stats.stamina:.1f}, "
-                      f"Velocidad: {player.stats.speed:.1f}")
-
-            print(f"\n**Equipo 2 - Promedios:** Nivel: {balance.team2_avg_level:.2f}, "
-                  f"Stamina: {balance.team2_avg_stamina:.2f}, Velocidad: {balance.team2_avg_speed:.2f}")
-            for i, player in enumerate(team2, 1):
-                positions_str = ", ".join(pos.value for pos in player.positions)
+            for i, team in enumerate(teams, 1):
+                print(f"\n**Equipo {i} - Promedios:**")
+                for j, player in enumerate(team, 1):
+                    positions_str = ", ".join(pos.value for pos in player.positions)
+                    print(f"{j}. {player.name} ({positions_str}) - "
+                          f"Nivel: {player.stats.level:.1f}, "
+                          f"Stamina: {player.stats.stamina:.1f}, "
+                          f"Velocidad: {player.stats.speed:.1f}")
 
 def initialize_system_from_json() -> Tuple[PlayerRegistry, TeamBalancer]:
     """Initialize the system from JSON data files"""
@@ -414,6 +430,7 @@ def initialize_system_from_json() -> Tuple[PlayerRegistry, TeamBalancer]:
     # Create balancer configuration
     balancer_config = TeamBalancerConfig(
         team_size=config.team_size,
+        num_teams=getattr(config, 'num_teams', 2),  # Use config.num_teams with fallback
         top_n_teams=config.top_n_teams,
         diversity_threshold=config.diversity_threshold,
         must_be_on_different_teams=config.must_be_on_different_teams,
