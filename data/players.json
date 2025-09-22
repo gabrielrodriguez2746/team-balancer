@@ -465,5 +465,51 @@
       "stamina": 2.4,
       "speed": 2.4
     }
+  },
+  {
+    "Id": 30,
+    "Name": "Santi",
+    "Position": [
+      "FW",
+      "DF",
+      "MF"
+    ],
+    "Stats": {
+      "level": 2.6,
+      "stamina": 3.5,
+      "speed": 3.3
+    }
+  },
+  {
+    "Id": 31,
+    "Name": "Brian",
+    "Position": [
+      "DF",
+      "LW",
+      "RW",
+      "CB",
+      "LB",
+      "MF",
+      "RB"
+    ],
+    "Stats": {
+      "level": 3.5,
+      "stamina": 3.0,
+      "speed": 3.5
+    }
+  },
+  {
+    "Id": 32,
+    "Name": "Felipe",
+    "Position": [
+      "RW",
+      "DF",
+      "MF"
+    ],
+    "Stats": {
+      "level": 3.0,
+      "stamina": 2.0,
+      "speed": 2.0
+    }
   }
 ]
