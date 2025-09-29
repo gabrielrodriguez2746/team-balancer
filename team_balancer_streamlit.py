@@ -581,16 +581,23 @@ class StreamlitTeamBalancerUI:
                 max_possible_teams = min(6, selected_count // 2)  # Max 6 teams, min 2 players per team
                 min_teams = 2
                 
-                if max_possible_teams >= min_teams:
+                if max_possible_teams > min_teams:
+                    # Show slider when there are multiple options
                     num_teams = st.slider(
-                        "Number of Teams", 
-                        min_value=min_teams, 
-                        max_value=max_possible_teams, 
+                        "Number of Teams",
+                        min_value=min_teams,
+                        max_value=max_possible_teams,
                         value=min(2, max_possible_teams),
                         help="Choose how many teams to generate"
                     )
                     st.session_state.num_teams = num_teams
+                elif max_possible_teams == min_teams:
+                    # When min equals max, just set the value and show info
+                    num_teams = max_possible_teams
+                    st.session_state.num_teams = num_teams
+                    st.info(f"🔢 Number of teams: {num_teams} (automatically set based on player count)")
                 else:
+                    # Fallback case (shouldn't happen with current logic)
                     num_teams = 2
                     st.session_state.num_teams = num_teams
                     st.info(f"🔢 Number of teams: {num_teams} (automatically set)")
@@ -598,7 +605,7 @@ class StreamlitTeamBalancerUI:
                 num_teams = 2
                 st.session_state.num_teams = num_teams
                 st.info("🔢 Select at least 4 players to configure teams")
-            
+
             # Calculate optimal team size based on selected players and number of teams
             if selected_count >= 4:
                 optimal_team_size = selected_count // num_teams
@@ -610,15 +617,14 @@ class StreamlitTeamBalancerUI:
                     st.info(f"📊 Optimal team size: {optimal_team_size} (perfect distribution)")
             else:
                 st.info("📊 Select at least 4 players to see team size")
-            
+
             # Show team size slider only when enough players are selected
             if selected_count >= 4:
                 # Calculate valid min and max values for slider
                 min_team_size = max(1, (selected_count - num_teams) // num_teams)  # Minimum viable team size
                 max_team_size = min(8, selected_count // num_teams)  # Maximum reasonable team size
-                
-                # Ensure min <= max for slider
-                if min_team_size <= max_team_size and max_team_size > 0:
+
+                if min_team_size < max_team_size and max_team_size > 0:
                     team_size = st.slider(
                         "Team Size", 
                         min_value=min_team_size, 
@@ -628,6 +634,13 @@ class StreamlitTeamBalancerUI:
                     )
                     st.session_state.team_size = team_size
                     required_players = team_size * num_teams
+                    st.info(f"Required players: {required_players} ({num_teams} teams × {team_size} players)")
+                elif min_team_size == max_team_size and max_team_size > 0:
+                    # Only one possible team size, set directly and show info
+                    team_size = min_team_size
+                    st.session_state.team_size = team_size
+                    required_players = team_size * num_teams
+                    st.info(f"Team size: {team_size} (automatically set)")
                     st.info(f"Required players: {required_players} ({num_teams} teams × {team_size} players)")
                 else:
                     # If we can't create a valid slider, just show the calculated team size
@@ -1228,10 +1241,10 @@ class StreamlitTeamBalancerUI:
             'goal_area_left': [(0, 25), (5, 35)],
             'goal_area_right': [(95, 25), (100, 35)]
         }
-        
+
         # Create figure
         fig = go.Figure()
-        
+
         # Add simple background (no pitch drawing)
         fig.add_shape(
             type="rect",
@@ -1240,19 +1253,19 @@ class StreamlitTeamBalancerUI:
             line=dict(color="lightgray", width=1),
             layer="below"
         )
-        
+
         # Position players on the field
         team_a_positions = self._get_player_positions(combination.team1, 'left')
         team_b_positions = self._get_player_positions(combination.team2, 'right')
-        
+
         # Add Team A players (left side - red/orange)
         for player in combination.team1:
             if player.name in team_a_positions:
                 pos = team_a_positions[player.name]
-                
+
                 # Truncate long names for display
                 display_name = player.name[:12] + "..." if len(player.name) > 12 else player.name
-                
+
                 # Create hover text with player stats if enabled
                 if show_stats:
                     hover_text = f"""
@@ -1268,7 +1281,7 @@ class StreamlitTeamBalancerUI:
                 else:
                     hover_info = 'skip'
                     hovertemplate = None
-                
+
                 fig.add_trace(go.Scatter(
                     x=[pos[0]],
                     y=[pos[1]],
@@ -1287,15 +1300,15 @@ class StreamlitTeamBalancerUI:
                     hoverinfo=hover_info,
                     hovertemplate=hovertemplate
                 ))
-        
+
         # Add Team B players (right side - blue)
         for player in combination.team2:
             if player.name in team_b_positions:
                 pos = team_b_positions[player.name]
-                
+
                 # Truncate long names for display
                 display_name = player.name[:12] + "..." if len(player.name) > 12 else player.name
-                
+
                 # Create hover text with player stats if enabled
                 if show_stats:
                     hover_text = f"""
@@ -1311,7 +1324,7 @@ class StreamlitTeamBalancerUI:
                 else:
                     hover_info = 'skip'
                     hovertemplate = None
-                
+
                 fig.add_trace(go.Scatter(
                     x=[pos[0]],
                     y=[pos[1]],
@@ -1330,7 +1343,7 @@ class StreamlitTeamBalancerUI:
                     hoverinfo=hover_info,
                     hovertemplate=hovertemplate
                 ))
-        
+
         # Update layout for screenshot-friendly design
         fig.update_layout(
             title=f"Team Combination {combination_number}",
@@ -1351,9 +1364,9 @@ class StreamlitTeamBalancerUI:
             width=900,
             height=600,
             margin=dict(l=50, r=50, t=80, b=50),
-            font=dict(family="Arial, sans-serif")
+            font=dict(family="Arial", size=12)
         )
-        
+
         # Add team labels with better styling
         fig.add_annotation(
             x=25, y=55,
@@ -1366,25 +1379,113 @@ class StreamlitTeamBalancerUI:
             xanchor='center',
             yanchor='middle'
         )
-        
+
         fig.add_annotation(
             x=75, y=55,
             text="TEAM B",
             showarrow=False,
             font=dict(size=18, color='blue', family="Arial, sans-serif"),
-            bgcolor='white',
-            bordercolor='blue',
             borderwidth=3,
             xanchor='center',
             yanchor='middle'
         )
-        
+
+        # Adjust for more teams (C, D, E, F)
+        if num_teams > 2:
+            fig.add_annotation(
+                x=10, y=45,
+                text="TEAM C",
+                showarrow=False,
+                font=dict(size=16, color='green', family="Arial, sans-serif"),
+                bgcolor='white',
+                bordercolor='green',
+                borderwidth=2,
+                xanchor='center',
+                yanchor='middle'
+            )
+
+            fig.add_annotation(
+                x=90, y=45,
+                text="TEAM D",
+                showarrow=False,
+                font=dict(size=16, color='orange', family="Arial, sans-serif"),
+                bgcolor='white',
+                bordercolor='orange',
+                borderwidth=2,
+                xanchor='center',
+                yanchor='middle'
+            )
+
+        if num_teams > 4:
+            fig.add_annotation(
+                x=10, y=35,
+                text="TEAM E",
+                showarrow=False,
+                font=dict(size=16, color='purple', family="Arial, sans-serif"),
+                bgcolor='white',
+                bordercolor='purple',
+                borderwidth=2,
+                xanchor='center',
+                yanchor='middle'
+            )
+
+            fig.add_annotation(
+                x=90, y=35,
+                text="TEAM F",
+                showarrow=False,
+                font=dict(size=16, color='brown', family="Arial, sans-serif"),
+                bgcolor='white',
+                bordercolor='brown',
+                borderwidth=2,
+                xanchor='center',
+                yanchor='middle'
+            )
+
+        # Hide axes
+        fig.update_xaxes(visible=False)
+        fig.update_yaxes(visible=False)
+
+        # Add field markings
+        for line, (start, end) in field_lines.items():
+            if line == 'center_circle':
+                # Center circle (draw as a circle)
+                fig.add_shape(
+                    type="circle",
+                    xref="x", yref="y",
+                    x0=start[0]-end, y0=start[1]-end,
+                    x1=start[0]+end, y1=start[1]+end,
+                    line_color="black",
+                    fillcolor="rgba(255, 255, 255, 0.5)",
+                    layer="above"
+                )
+            else:
+                # Other lines (rectangles)
+                fig.add_shape(
+                    type="rect",
+                    xref="x", yref="y",
+                    x0=start[0], y0=start[1],
+                    x1=end[0], y1=end[1],
+                    line_color="black",
+                    fillcolor="rgba(255, 255, 255, 0.5)",
+                    layer="above"
+                )
+
+        # Update layout
+        fig.update_layout(
+            title=f"Team Combination {combination_number} - {num_teams} Teams",
+            title_x=0.5,
+            width=800,
+            height=600,
+            margin=dict(l=0, r=0, t=50, b=0),
+            font=dict(family="Arial, sans-serif", size=12)
+        )
+
         st.plotly_chart(fig, use_container_width=True)
-    
+
     def _get_player_positions(self, team_players, side):
         """Get positions for players on the soccer field based on their positions with smart distribution"""
         positions = {}
-        
+
         # Define position mappings for each side with multiple slots per position
         if side == 'left':
             # Team A positions (left side) - multiple slots per position
@@ -1414,17 +1515,17 @@ class StreamlitTeamBalancerUI:
                 'RB': [(85, 45), (82, 50), (88, 40)],      # Right back positions
                 'GK': [(95, 30), (97, 25), (97, 35)],      # Goalkeeper positions
             }
-        
+
         # Position priority order (closest to forward)
         position_priority = ['FW', 'LW', 'RW', 'CM', 'MF', 'DF', 'CB', 'LB', 'RB', 'GK']
-        
+
         # Track used coordinates to avoid overlap
         used_coords = set()
-        
+
         # First pass: assign players to their primary positions
         for player in team_players:
             primary_pos = player.positions[0].value if player.positions else 'MF'
-            
+
             if primary_pos in position_slots:
                 # Try to find an available slot for this position
                 for coords in position_slots[primary_pos]:
@@ -1438,17 +1539,17 @@ class StreamlitTeamBalancerUI:
             else:
                 # Position not found, mark for secondary assignment
                 positions[player.name] = None
-        
+
         # Second pass: assign remaining players to closest available positions
         remaining_players = [name for name, pos in positions.items() if pos is None]
-        
+
         for player_name in remaining_players:
             player = next(p for p in team_players if p.name == player_name)
             primary_pos = player.positions[0].value if player.positions else 'MF'
-            
+
             # Find closest available position based on priority
             assigned = False
-            
+
             # Try positions in priority order
             for pos in position_priority:
                 if pos in position_slots:
@@ -1460,7 +1561,7 @@ class StreamlitTeamBalancerUI:
                             break
                     if assigned:
                         break
-            
+
             # If still not assigned, find any available position
             if not assigned:
                 for pos, slots in position_slots.items():
@@ -1472,51 +1573,70 @@ class StreamlitTeamBalancerUI:
                             break
                     if assigned:
                         break
-            
+
             # Last resort: create a new position near the center
             if not assigned:
                 if side == 'left':
                     x_base, y_base = 20, 30
                 else:
                     x_base, y_base = 80, 30
-                
+
                 # Find a free spot with some offset
                 offset = len(used_coords) * 2
                 new_coords = (x_base + offset, y_base + (offset % 8))
-                
-                # Ensure it's not too close to existing positions
-                while any(abs(new_coords[0] - x) < 3 and abs(new_coords[1] - y) < 3 
-                         for x, y in used_coords):
-                    offset += 1
-                    new_coords = (x_base + offset, y_base + (offset % 8))
-                
+
                 positions[player_name] = new_coords
                 used_coords.add(new_coords)
-        
+
         return positions
 
     def _export_results(self):
-        """Export results to JSON"""
+        """Export results to JSON - supports multiple teams"""
         if 'team_combinations' not in st.session_state:
             st.error("No results to export.")
             return
-        
+
         try:
             # Prepare export data
             export_data = {
                 'timestamp': datetime.now().isoformat(),
                 'team_size': st.session_state.team_size,
+                'num_teams': st.session_state.get('num_teams', 2),
                 'total_players': len(st.session_state.selected_players),
                 'combinations': []
             }
-            
+
             for i, combination in enumerate(st.session_state.team_combinations[:3]):
                 combo_data = {
                     'rank': i + 1,
                     'balance_score': combination.balance.total_balance_score,
-                    'team_a': [{'name': p.name, 'level': p.stats.level, 'stamina': p.stats.stamina, 'speed': p.stats.speed} for p in combination.team1],
-                    'team_b': [{'name': p.name, 'level': p.stats.level, 'stamina': p.stats.stamina, 'speed': p.stats.speed} for p in combination.team2]
+                    'teams': []
                 }
+
+                # Export all teams, not just team_a and team_b
+                for team_idx, team in enumerate(combination.teams):
+                    team_data = {
+                        'team_id': team_idx + 1,
+                        'players': [
+                            {
+                                'name': p.name,
+                                'level': p.stats.level,
+                                'stamina': p.stats.stamina,
+                                'speed': p.stats.speed,
+                                'positions': [pos.value for pos in p.positions],
+                                'total_stats': p.stats.level + p.stats.stamina + p.stats.speed
+                            }
+                            for p in team
+                        ],
+                        'team_totals': {
+                            'level': sum(p.stats.level for p in team),
+                            'stamina': sum(p.stats.stamina for p in team),
+                            'speed': sum(p.stats.speed for p in team),
+                            'total': sum(p.stats.level + p.stats.stamina + p.stats.speed for p in team)
+                        }
+                    }
+                    combo_data['teams'].append(team_data)
+
                 export_data['combinations'].append(combo_data)
             
             # Create download button
@@ -1541,4 +1661,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()

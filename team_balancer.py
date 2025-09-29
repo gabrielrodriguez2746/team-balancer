@@ -15,6 +15,7 @@ import json
 import logging
 from collections import defaultdict
 import math
+import random
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -315,18 +316,50 @@ class TeamBalancer:
             total_balance_score=total_balance_score
         )
     
+    def _estimate_num_combinations(self, n_players, n_teams, team_size):
+        """Estimate the number of ways to split n_players into n_teams of team_size each (unordered teams)"""
+        from math import comb, factorial
+        numerator = math.factorial(n_players)
+        denominator = (math.factorial(team_size) ** n_teams) * math.factorial(n_teams)
+        return numerator // denominator
+
+    def _generate_random_team_combinations(self, players: List[Player], num_teams: int, team_size: int, n_samples: int = 10000) -> List[List[List[Player]]]:
+        """Generate random team combinations (for large N)"""
+        all_players = players[:]
+        combinations_set = set()
+        results = []
+        max_attempts = n_samples * 10
+        attempts = 0
+        while len(results) < n_samples and attempts < max_attempts:
+            attempts += 1
+            random.shuffle(all_players)
+            teams = [all_players[i*team_size:(i+1)*team_size] for i in range(num_teams)]
+            # Ensure all teams have correct size
+            if any(len(team) != team_size for team in teams):
+                continue
+            # Use sorted tuple of sorted player IDs for uniqueness
+            key = tuple(tuple(sorted(p.player_id for p in team)) for team in teams)
+            if key in combinations_set:
+                continue
+            combinations_set.add(key)
+            results.append([team[:] for team in teams])
+        return results
+
     def _generate_team_combinations(self, players: List[Player]) -> List[List[List[Player]]]:
-        """Generate all possible team combinations"""
+        """Generate all possible team combinations, or random samples if too large"""
         num_teams = self.config.num_teams
         team_size = self.config.team_size
         total_needed = num_teams * team_size
-        
-        # If we have more players than needed, we'll use only the first total_needed
         if len(players) > total_needed:
             players = players[:total_needed]
         elif len(players) < total_needed:
             raise ValueError(f"Not enough players: need {total_needed}, have {len(players)}")
-        
+        # Estimate number of combinations
+        n_combos = self._estimate_num_combinations(len(players), num_teams, team_size)
+        MAX_COMBINATIONS = 100000
+        if n_combos > MAX_COMBINATIONS:
+            logger.info(f"Too many combinations ({n_combos}), using random sampling.")
+            return self._generate_random_team_combinations(players, num_teams, team_size, n_samples=10000)
         # Generate all ways to divide players into teams
         def distribute_players(remaining_players, teams_left, current_combination):
             if teams_left == 0:

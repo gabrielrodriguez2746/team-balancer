@@ -484,18 +484,14 @@
     "Id": 31,
     "Name": "Brian",
     "Position": [
-      "DF",
+      "FW",
       "LW",
-      "RW",
-      "CB",
-      "LB",
-      "MF",
-      "RB"
+      "RW"
     ],
     "Stats": {
-      "level": 3.5,
-      "stamina": 3.0,
-      "speed": 3.5
+      "level": 3.3,
+      "stamina": 2.9,
+      "speed": 3.2
     }
   },
   {
@@ -510,6 +506,124 @@
       "level": 3.0,
       "stamina": 2.0,
       "speed": 2.0
+    }
+  },
+  {
+    "Id": 33,
+    "Name": "Luis",
+    "Position": [
+      "MF",
+      "CM",
+      "LW",
+      "RW"
+    ],
+    "Stats": {
+      "level": 3.5,
+      "stamina": 3.0,
+      "speed": 3.25
+    }
+  },
+  {
+    "Id": 34,
+    "Name": "Marc (portero)",
+    "Position": [
+      "GK",
+      "DF",
+      "FW"
+    ],
+    "Stats": {
+      "level": 3.0,
+      "stamina": 3.6,
+      "speed": 3.0
+    }
+  },
+  {
+    "Id": 35,
+    "Name": "Frano fino 🇦🇷",
+    "Position": [
+      "MF",
+      "DF",
+      "LW",
+      "RW",
+      "CM",
+      "CB",
+      "LB",
+      "RB"
+    ],
+    "Stats": {
+      "level": 3.8,
+      "stamina": 3.5,
+      "speed": 3.8
+    }
+  },
+  {
+    "Id": 36,
+    "Name": "Maxi H (Frano fino 🇦🇷)",
+    "Position": [
+      "RW",
+      "MF",
+      "LW",
+      "CM",
+      "CB"
+    ],
+    "Stats": {
+      "level": 4.7,
+      "stamina": 4.7,
+      "speed": 4.7
+    }
+  },
+  {
+    "Id": 37,
+    "Name": "Christian (Gabo)",
+    "Position": [
+      "LW"
+    ],
+    "Stats": {
+      "level": 4.0,
+      "stamina": 4.0,
+      "speed": 4.0
+    }
+  },
+  {
+    "Id": 38,
+    "Name": "Johan (Christian/Gabo)",
+    "Position": [
+      "CB",
+      "DF"
+    ],
+    "Stats": {
+      "level": 3.0,
+      "stamina": 4.0,
+      "speed": 4.0
+    }
+  },
+  {
+    "Id": 39,
+    "Name": "Juan (Christian/Gabo)",
+    "Position": [
+      "CB",
+      "MF",
+      "FW",
+      "CM"
+    ],
+    "Stats": {
+      "level": 4.0,
+      "stamina": 4.0,
+      "speed": 3.7
+    }
+  },
+  {
+    "Id": 40,
+    "Name": "Christian Gonzalez (Brian)",
+    "Position": [
+      "FW",
+      "LW",
+      "RW"
+    ],
+    "Stats": {
+      "level": 3.7,
+      "stamina": 3.0,
+      "speed": 3.7
     }
   }
 ]
