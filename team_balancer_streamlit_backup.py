@@ -208,11 +208,11 @@ class StreamlitTeamBalancerUI:
         
         with col1:
             st.markdown("### 🚀 Quick Actions")
-            if st.button("👥 Manage Players", use_container_width=True, key="manage_players"):
+            if st.button("👥 Manage Players", use_container_width=True):
                 st.session_state.current_page = "players"
                 st.rerun()
             
-            if st.button("⚽ Create Teams", use_container_width=True, key="create_teams_btn"):
+            if st.button("⚽ Create Teams", use_container_width=True):
                 st.session_state.current_page = "create_teams"
                 st.rerun()
         
@@ -262,17 +262,17 @@ class StreamlitTeamBalancerUI:
         col1, col2, col3 = st.columns([1, 1, 1])
         
         with col1:
-            if st.button("➕ Add Player", use_container_width=True, key="add_player"):
+            if st.button("➕ Add Player", use_container_width=True):
                 self._show_add_player_form()
         
         with col2:
-            if st.button("🔄 Refresh", use_container_width=True, key="refresh_players"):
+            if st.button("🔄 Refresh", use_container_width=True):
                 self._load_players()
                 st.success("Players refreshed successfully!")
                 st.rerun()
         
         with col3:
-            if st.button("📊 View Stats", use_container_width=True, key="view_stats"):
+            if st.button("📊 View Stats", use_container_width=True):
                 self._show_player_stats()
         
         # Player list
@@ -321,7 +321,7 @@ class StreamlitTeamBalancerUI:
                 if player_names:
                     selected_player_name = st.selectbox("Select player to edit:", player_names)
                     
-                    if st.button("✏️ Edit Player", type="primary", key="edit_player"):
+                    if st.button("✏️ Edit Player", type="primary"):
                         selected_player = next(p for p in players if p.name == selected_player_name)
                         st.session_state.editing_player = selected_player
                         st.rerun()
@@ -333,7 +333,7 @@ class StreamlitTeamBalancerUI:
                 if player_names:
                     delete_player_name = st.selectbox("Select player to delete:", player_names)
                     
-                    if st.button("🗑️ Delete Player", type="secondary", key="delete_player"):
+                    if st.button("🗑️ Delete Player", type="secondary"):
                         if st.checkbox("Confirm deletion"):
                             self._delete_player(delete_player_name)
                             st.success(f"Player '{delete_player_name}' deleted successfully!")
@@ -347,7 +347,7 @@ class StreamlitTeamBalancerUI:
                 st.markdown("### ✏️ Editing Player")
                 
                 # Add a cancel button outside the form
-                if st.button("❌ Cancel Edit", type="secondary", key="cancel_edit"):
+                if st.button("❌ Cancel Edit", type="secondary"):
                     del st.session_state.editing_player
                     st.rerun()
                 
@@ -680,15 +680,15 @@ class StreamlitTeamBalancerUI:
         
         df = pd.DataFrame(player_data)
         
-        # Multi-select using player IDs as options
-        selected_player_ids = st.multiselect(
+        # Multi-select
+        selected_indices = st.multiselect(
             "Select players for teams:",
-            options=df['ID'].tolist(),
-            format_func=lambda x: f"{df[df['ID'] == x]['Name'].iloc[0]} (Level: {df[df['ID'] == x]['Level'].iloc[0]:.1f}, Total: {df[df['ID'] == x]['Total'].iloc[0]:.1f})"
+            options=df.index,
+            format_func=lambda x: f"{df.iloc[x]['Name']} (Level: {df.iloc[x]['Level']:.1f}, Total: {df.iloc[x]['Total']:.1f})"
         )
         
         # Update selected players
-        st.session_state.selected_players = set(selected_player_ids)
+        st.session_state.selected_players = {df.iloc[i]['ID'] for i in selected_indices}
         
         # Display selected players
         if st.session_state.selected_players:
@@ -699,15 +699,15 @@ class StreamlitTeamBalancerUI:
         
         # Continue button
         if len(st.session_state.selected_players) >= 4:
-            if st.button("Continue → Together Selection", use_container_width=True, type="primary", key="continue_together"):
+            if st.button("Continue → Together Selection", use_container_width=True, type="primary"):
                 st.session_state.current_page = "together"
                 st.rerun()
         else:
-            st.button("Continue → Together Selection", use_container_width=True, disabled=True, key="continue_together_disabled")
+            st.button("Continue → Together Selection", use_container_width=True, disabled=True)
             st.warning("⚠️ Select at least 4 players to continue")
     
     def _show_together_page(self):
-        """Show the per-team 'players should play together' page"""
+        """Show the 'players should play together' page"""
         st.markdown('<h1 class="sub-header">🤝 Players Should Play Together</h1>', unsafe_allow_html=True)
         
         if not st.session_state.selected_players:
@@ -719,9 +719,12 @@ class StreamlitTeamBalancerUI:
                           if p.player_id in st.session_state.selected_players]
         
         st.markdown("""
-        Select players who should play on the same team for each team.
-        You can specify different groups of players for each team.
+        Select players who should play on the same team, or skip this step.
+        You can select multiple groups of players who should be together.
         """)
+        
+        # Player selection for together groups
+        st.markdown("### 👥 Select Players to Play Together")
         
         # Convert to DataFrame
         player_data = []
@@ -738,51 +741,33 @@ class StreamlitTeamBalancerUI:
         
         df = pd.DataFrame(player_data)
         
-        # Initialize per-team constraints if not exists
-        if 'per_team_together_constraints' not in st.session_state:
-            st.session_state.per_team_together_constraints = {}
+        # Multi-select for together players
+        together_indices = st.multiselect(
+            "Select players who should play together:",
+            options=df.index,
+            format_func=lambda x: f"{df.iloc[x]['Name']} (Level: {df.iloc[x]['Level']:.1f})"
+        )
         
-        # Get number of teams
-        num_teams = st.session_state.get('num_teams', 2)
+        # Update together players
+        st.session_state.together_players = {df.iloc[i]['ID'] for i in together_indices}
         
-        # Create tabs for each team
-        team_tabs = st.tabs([f"Team {i+1}" for i in range(num_teams)])
-        
-        for team_number, tab in enumerate(team_tabs, 1):
-            with tab:
-                st.markdown(f"### Team {team_number} - Players Who Must Play Together")
-                
-                # Multi-select for this team using player IDs as options
-                together_player_ids = st.multiselect(
-                    f"Select players who must be on Team {team_number}:",
-                    options=df['ID'].tolist(),
-                    format_func=lambda x: f"{df[df['ID'] == x]['Name'].iloc[0]} (Level: {df[df['ID'] == x]['Level'].iloc[0]:.1f})",
-                    key=f"team_{team_number}_together"
-                )
-                
-                # Update constraints
-                if together_player_ids:
-                    st.session_state.per_team_together_constraints[team_number] = together_player_ids
-                elif team_number in st.session_state.per_team_together_constraints:
-                    del st.session_state.per_team_together_constraints[team_number]
-        
-        # Show summary
-        if st.session_state.per_team_together_constraints:
-            st.markdown("### 📋 Summary")
-            for team_num, player_ids in st.session_state.per_team_together_constraints.items():
-                if player_ids:
-                    player_names = [df[df['ID'] == pid]['Name'].iloc[0] for pid in player_ids]
-                    st.write(f"**Team {team_num}**: {', '.join(player_names)}")
+        # Display together players
+        if st.session_state.together_players:
+            st.markdown("### 🤝 Players Who Will Play Together")
+            together_players_data = [row for i, row in df.iterrows() if row['ID'] in st.session_state.together_players]
+            together_df = pd.DataFrame(together_players_data)
+            st.dataframe(together_df, use_container_width=True, hide_index=True)
         
         # Navigation buttons
         col1, col2 = st.columns(2)
+        
         with col1:
-            if st.button("← Back", use_container_width=True, key="back_together"):
+            if st.button("← Back", use_container_width=True):
                 st.session_state.current_page = "create_teams"
                 st.rerun()
         
         with col2:
-            if st.button("Continue → Separate Selection", use_container_width=True, key="continue_separate"):
+            if st.button("Continue → Separate Selection", use_container_width=True, type="primary"):
                 st.session_state.current_page = "separate"
                 st.rerun()
     
@@ -821,15 +806,15 @@ class StreamlitTeamBalancerUI:
         
         df = pd.DataFrame(player_data)
         
-        # Multi-select for separate players using player IDs as options
-        separate_player_ids = st.multiselect(
+        # Multi-select for separate players
+        separate_indices = st.multiselect(
             "Select players who should NOT play together:",
-            options=df['ID'].tolist(),
-            format_func=lambda x: f"{df[df['ID'] == x]['Name'].iloc[0]} (Level: {df[df['ID'] == x]['Level'].iloc[0]:.1f})"
+            options=df.index,
+            format_func=lambda x: f"{df.iloc[x]['Name']} (Level: {df.iloc[x]['Level']:.1f})"
         )
         
         # Update separate players
-        st.session_state.separate_players = set(separate_player_ids)
+        st.session_state.separate_players = {df.iloc[i]['ID'] for i in separate_indices}
         
         # Display separate players
         if st.session_state.separate_players:
@@ -843,11 +828,11 @@ class StreamlitTeamBalancerUI:
         
         with col1:
             if st.button("← Back", use_container_width=True):
-                st.session_state.current_page = "create_teams"
+                st.session_state.current_page = "together"
                 st.rerun()
         
         with col2:
-            if st.button("Generate Teams →", use_container_width=True, type="primary", key="generate_teams"):
+            if st.button("Generate Teams →", use_container_width=True, type="primary"):
                 self._generate_teams()
     
     def _generate_teams(self):
@@ -883,25 +868,6 @@ class StreamlitTeamBalancerUI:
                 st.info(f"📊 Forming {num_teams} teams of {actual_team_size} players each from {len(selected_players)} selected players")
             
             # Prepare constraints
-            # Prepare per-team constraints
-            per_team_together_constraints = {}
-            
-            # Filter out invalid player IDs that are not in selected players
-            selected_player_ids = {p.player_id for p in selected_players}
-            print(f"   Selected player IDs: {sorted(selected_player_ids)}")
-            print("   Raw per-team constraints:", st.session_state.get("per_team_together_constraints", {}))
-            
-            # Per-team together constraints (players who should be on specific teams)
-            if st.session_state.get("per_team_together_constraints"):
-                for team_num, player_ids in st.session_state.per_team_together_constraints.items():
-                    # Filter out invalid player IDs
-                    valid_player_ids = [pid for pid in player_ids if pid in selected_player_ids]
-                    if valid_player_ids and len(valid_player_ids) != len(player_ids):
-                        print(f"   Warning: Filtered out invalid player IDs for team {team_num}: {set(player_ids) - set(valid_player_ids)}")
-                    if valid_player_ids:  # Only add non-empty constraints
-                        per_team_together_constraints[team_num] = [valid_player_ids]
-            # Log per-team constraints for debugging
-            print(f"   Per-team together constraints: {per_team_together_constraints}")
             together_constraints = []
             separate_constraints = []
             
@@ -940,7 +906,6 @@ class StreamlitTeamBalancerUI:
                 diversity_threshold=self.config.diversity_threshold,
                 must_be_on_different_teams=separate_constraints,  # Use dynamic separate constraints
                 must_be_on_same_teams=together_constraints,       # Use dynamic together constraints
-                must_be_on_same_teams_by_team=per_team_together_constraints,
                 stat_weights=self.config.stat_weights
             )
             
@@ -956,28 +921,6 @@ class StreamlitTeamBalancerUI:
             progress_bar.progress(25)
             
             # Prepare constraints
-            # Prepare per-team constraints
-            per_team_together_constraints = {}
-            
-            # Per-team together constraints (players who should be on specific teams)
-            if st.session_state.get("per_team_together_constraints"):
-                for team_num, player_ids in st.session_state.per_team_together_constraints.items():
-                    # Filter out invalid player IDs
-                    valid_player_ids = [pid for pid in player_ids if pid in selected_player_ids]
-                    if valid_player_ids and len(valid_player_ids) != len(player_ids):
-                        print(f"   Warning: Filtered out invalid player IDs for team {team_num}: {set(player_ids) - set(valid_player_ids)}")
-                    player_ids = valid_player_ids
-                    # Filter out invalid player IDs
-                    valid_player_ids = [pid for pid in player_ids if pid in selected_player_ids]
-                    if valid_player_ids and len(valid_player_ids) != len(player_ids):
-                        print(f"   Warning: Filtered out invalid player IDs for team {team_num}: {set(player_ids) - set(valid_player_ids)}")
-                    player_ids = valid_player_ids
-                    if valid_player_ids:  # Only add non-empty constraints
-                        per_team_together_constraints[team_num] = [valid_player_ids]
-            
-            # Log per-team constraints for debugging
-            # Log per-team constraints for debugging
-            print(f"   Per-team together constraints: {per_team_together_constraints}")
             together_constraints = []
             separate_constraints = []
             
@@ -1147,19 +1090,19 @@ class StreamlitTeamBalancerUI:
         
         # Export results
         st.markdown("### 📤 Export Results")
-        if st.button("Export to JSON", use_container_width=True, key="export_json"):
+        if st.button("Export to JSON", use_container_width=True):
             self._export_results()
         
         # Navigation
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("← Back to Main", use_container_width=True, key="back_to_main"):
+            if st.button("← Back to Main", use_container_width=True):
                 st.session_state.current_page = "main"
                 st.rerun()
         
         with col2:
-            if st.button("Generate New Teams", use_container_width=True, type="primary", key="generate_new_teams"):
+            if st.button("Generate New Teams", use_container_width=True, type="primary"):
                 st.session_state.current_page = "create_teams"
                 st.rerun()
     

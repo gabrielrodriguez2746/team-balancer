@@ -107,6 +107,7 @@ class TeamBalancerConfig:
     diversity_threshold: float = 3.0
     must_be_on_different_teams: List[List[int]] = field(default_factory=lambda: [[15, 23]])
     must_be_on_same_teams: List[List[int]] = field(default_factory=list)
+    must_be_on_same_teams_by_team: Dict[int, List[List[int]]] = field(default_factory=dict)
     stat_weights: Dict[str, float] = field(default_factory=lambda: {"level": 1.0, "stamina": 1.0, "speed": 1.0})
     
     def __post_init__(self):
@@ -267,6 +268,18 @@ class TeamBalancer:
             if not found_on_same_team:
                 return False
         
+        # Check must-be-same-on-specific-team constraints (1-based team index)
+        if self.config.must_be_on_same_teams_by_team:
+            for team_index_1_based, groups in self.config.must_be_on_same_teams_by_team.items():
+                # Validate index points to an existing team
+                if not (1 <= team_index_1_based <= len(team_ids_sets)):
+                    logger.warning(f"Configured team index {team_index_1_based} is out of range for current teams; failing combination.")
+                    return False
+                team_ids = team_ids_sets[team_index_1_based - 1]
+                for group in groups:
+                    if not all(pid in team_ids for pid in group):
+                        return False
+        
         return True
     
     def _calculate_team_balance(self, teams: List[List[Player]]) -> TeamBalance:
@@ -359,7 +372,7 @@ class TeamBalancer:
         MAX_COMBINATIONS = 100000
         if n_combos > MAX_COMBINATIONS:
             logger.info(f"Too many combinations ({n_combos}), using random sampling.")
-            return self._generate_random_team_combinations(players, num_teams, team_size, n_samples=10000)
+            return self._generate_random_team_combinations(players, num_teams, team_size, n_samples=100000)
         # Generate all ways to divide players into teams
         def distribute_players(remaining_players, teams_left, current_combination):
             if teams_left == 0:
@@ -380,6 +393,19 @@ class TeamBalancer:
         
         return list(distribute_players(players, num_teams, []))
 
+
+    def _generate_constraint_aware_combinations(self, players: List[Player]) -> List[List[List[Player]]]:
+        """Generate combinations that respect per-team constraints (simplified)"""
+        return self._generate_team_combinations(players)
+    
+    def _generate_relaxed_constraint_combinations(self, players: List[Player], constraint_players: List[int]) -> List[List[List[Player]]]:
+        """Generate combinations with relaxed constraints (simplified)"""
+        return self._generate_team_combinations(players)
+    
+    def _generate_random_combinations(self, players: List[Player]) -> List[List[List[Player]]]:
+        """Generate random team combinations (simplified)"""
+        return self._generate_team_combinations(players)
+    
     def generate_balanced_teams(self, player_ids: List[int]) -> List[TeamCombination]:
         """Generate balanced teams from player IDs"""
         players = self.player_registry.get_players_by_ids(player_ids)
@@ -511,5 +537,3 @@ def main():
         logger.error(f"Error in main: {e}")
         sys.exit(1)
 
-if __name__ == "__main__":
-    main()
