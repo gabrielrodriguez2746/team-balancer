@@ -100,9 +100,16 @@ class TeamCombination(NamedTuple):
 
 @dataclass
 class TeamBalancerConfig:
-    """Configuration for team balancing"""
+    """
+    Configuration for team balancing.
+
+    must_be_on_same_teams_by_team:
+        Dict[int, List[List[int]]] mapping 1-based team index to list of groups of player IDs.
+        Each group must be assigned together on the specified team.
+        Example: {1: [[1,10,15,12]], 2: [[3,2]]}
+    """
     team_size: int = 6
-    num_teams: int = 2  # NEW: Number of teams to generate
+    num_teams: int = 2  # Number of teams to generate
     top_n_teams: int = 3
     diversity_threshold: float = 3.0
     must_be_on_different_teams: List[List[int]] = field(default_factory=lambda: [[15, 23]])
@@ -267,7 +274,7 @@ class TeamBalancer:
             
             if not found_on_same_team:
                 return False
-        
+
         # Check must-be-same-on-specific-team constraints (1-based team index)
         if self.config.must_be_on_same_teams_by_team:
             for team_index_1_based, groups in self.config.must_be_on_same_teams_by_team.items():
@@ -372,7 +379,7 @@ class TeamBalancer:
         MAX_COMBINATIONS = 100000
         if n_combos > MAX_COMBINATIONS:
             logger.info(f"Too many combinations ({n_combos}), using random sampling.")
-            return self._generate_random_team_combinations(players, num_teams, team_size, n_samples=100000)
+            return self._generate_random_team_combinations(players, num_teams, team_size, n_samples=10000)
         # Generate all ways to divide players into teams
         def distribute_players(remaining_players, teams_left, current_combination):
             if teams_left == 0:
@@ -393,19 +400,6 @@ class TeamBalancer:
         
         return list(distribute_players(players, num_teams, []))
 
-
-    def _generate_constraint_aware_combinations(self, players: List[Player]) -> List[List[List[Player]]]:
-        """Generate combinations that respect per-team constraints (simplified)"""
-        return self._generate_team_combinations(players)
-    
-    def _generate_relaxed_constraint_combinations(self, players: List[Player], constraint_players: List[int]) -> List[List[List[Player]]]:
-        """Generate combinations with relaxed constraints (simplified)"""
-        return self._generate_team_combinations(players)
-    
-    def _generate_random_combinations(self, players: List[Player]) -> List[List[List[Player]]]:
-        """Generate random team combinations (simplified)"""
-        return self._generate_team_combinations(players)
-    
     def generate_balanced_teams(self, player_ids: List[int]) -> List[TeamCombination]:
         """Generate balanced teams from player IDs"""
         players = self.player_registry.get_players_by_ids(player_ids)
@@ -494,6 +488,7 @@ def initialize_system_from_json() -> Tuple[PlayerRegistry, TeamBalancer]:
         diversity_threshold=config.diversity_threshold,
         must_be_on_different_teams=config.must_be_on_different_teams,
         must_be_on_same_teams=config.must_be_on_same_teams,
+        must_be_on_same_teams_by_team=getattr(config, 'must_be_on_same_teams_by_team', {}),
         stat_weights=config.stat_weights
     )
     
@@ -537,3 +532,5 @@ def main():
         logger.error(f"Error in main: {e}")
         sys.exit(1)
 
+if __name__ == "__main__":
+    main()
