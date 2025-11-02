@@ -2,23 +2,25 @@
 
 ## Overview
 
-This document serves as the main entry point for all Team Balancer documentation. The system has been completely modernized with a clean architecture, comprehensive testing, and full CRUD operations.
+This document serves as the main entry point for all Team Balancer documentation. The system has been completely modernized with a clean architecture and full CRUD operations through a Streamlit web interface.
 
 ## 🚀 Quick Start
 
 ### Installation & Setup
 ```bash
+# Install dependencies
+pip install -r requirements.txt
+
 # Initialize with default players
 python initialize_data.py
 
-# Run the main application
+# Run the Streamlit web application
+python run_streamlit.py
+# or
+streamlit run team_balancer_streamlit.py
+
+# Run the command-line version
 python team_balancer.py
-
-# Run the GUI
-python team_balancer_ui.py
-
-# Run tests
-python test_team_balancer_new.py
 ```
 
 ### Basic Usage
@@ -38,24 +40,14 @@ python test_team_balancer_new.py
 - **[PLAYER_REMOVAL_GUIDE.md](PLAYER_REMOVAL_GUIDE.md)** - Guide for removing players from the system
 
 ### Technical Documentation
-- **[STREAMLIT_IMPLEMENTATION.md](STREAMLIT_IMPLEMENTATION.md)** - Modern Streamlit web-based UI implementation
-- **[TKINTER_WIDGET_FIXES.md](TKINTER_WIDGET_FIXES.md)** - Technical details of Tkinter widget reference fixes
-- **[CTA_FIXES.md](CTA_FIXES.md)** - Technical details of CTA button functionality fixes
-- **[EDIT_PLAYER_FIX.md](EDIT_PLAYER_FIX.md)** - Technical details of edit player functionality fix
-- **[UI_LOADING_FIXES.md](UI_LOADING_FIXES.md)** - Technical details of loading states and button management fixes
-- **[UI_REDESIGN_SUMMARY.md](UI_REDESIGN_SUMMARY.md)** - Technical details of multi-screen UI redesign
-- **[CRUD_IMPLEMENTATION_SUMMARY.md](CRUD_IMPLEMENTATION_SUMMARY.md)** - Technical details of CRUD implementation
-- **[PLAYER_REMOVAL_SUMMARY.md](PLAYER_REMOVAL_SUMMARY.md)** - Technical details of player removal system
-- **[CODE_REVIEW_SUMMARY.md](CODE_REVIEW_SUMMARY.md)** - Code review findings and improvements
-
-### Legacy Documentation (Archived)
-- **[LEGACY_REMOVAL_SUMMARY.md](LEGACY_REMOVAL_SUMMARY.md)** - Documentation of legacy system removal
+- **[CHANGES_SUMMARY.md](CHANGES_SUMMARY.md)** - Detailed change history and migration notes
 
 ## 🏗️ Architecture
 
 ### Core Components
 - **`team_balancer.py`** - Core balancing logic and player models
-- **`team_balancer_ui.py`** - Modern GUI with CRUD operations
+- **`team_balancer_streamlit.py`** - Streamlit web UI with CRUD operations
+- **`run_streamlit.py`** - Streamlit launcher script
 - **`config.py`** - Configuration management
 - **`data_manager.py`** - Data persistence and validation
 - **`player_manager.py`** - Command-line player management
@@ -71,11 +63,10 @@ python test_team_balancer_new.py
 - ✅ **Dataclass-based models** with validation
 - ✅ **JSON data persistence** with automatic backups
 - ✅ **Modular design** with separated concerns
-- ✅ **Comprehensive testing** with 17 test cases
 - ✅ **Type safety** with full type hints
 
 ### User Interface
-- ✅ **Modern GUI** with Tkinter
+- ✅ **Modern Web UI** with Streamlit
 - ✅ **Full CRUD operations** (Create, Read, Update, Delete)
 - ✅ **Real-time filtering** and search
 - ✅ **Team generation** with visual results
@@ -93,24 +84,13 @@ python test_team_balancer_new.py
 ### Code Quality
 - **Type Hints**: Full type annotations throughout
 - **Documentation**: Comprehensive docstrings
-- **Testing**: 17 test cases covering all functionality
 - **Error Handling**: Graceful error recovery
 - **Logging**: Structured logging system
-
-### Testing
-```bash
-# Run all tests
-python test_team_balancer_new.py
-
-# Run specific test categories
-python -m pytest test_team_balancer_new.py -k "test_player"
-```
 
 ### Code Standards
 - **PEP 8**: Python style guidelines
 - **Type Safety**: Full type hints
 - **Documentation**: Docstrings for all functions
-- **Testing**: Unit and integration tests
 
 ## 📊 Performance
 
@@ -131,8 +111,9 @@ python -m pytest test_team_balancer_new.py -k "test_player"
 ### Management Scripts
 - **`initialize_data.py`** - Initialize data directory
 - **`player_manager.py`** - Command-line player management
-- **`team_balancer.py`** - Main application
-- **`team_balancer_ui.py`** - GUI application
+- **`team_balancer.py`** - Command-line application
+- **`team_balancer_streamlit.py`** - Streamlit web application
+- **`run_streamlit.py`** - Streamlit launcher
 
 ### Data Operations
 ```bash
@@ -152,8 +133,8 @@ python player_manager.py --interactive
 
 ### Common Issues
 1. **Data not loading**: Run `python initialize_data.py`
-2. **UI not starting**: Check Python and tkinter installation
-3. **Tests failing**: Ensure all dependencies are installed
+2. **UI not starting**: Check Python and Streamlit installation (`pip install -r requirements.txt`)
+3. **Port already in use**: Change port in `run_streamlit.py` or use `streamlit run team_balancer_streamlit.py --server.port 8502`
 4. **Permission errors**: Check file permissions in data directory
 
 ### Debug Mode
@@ -169,7 +150,6 @@ logging.basicConfig(level=logging.DEBUG)
 - **Advanced statistics** and analytics
 - **Team history** and performance tracking
 - **Export to multiple formats** (CSV, Excel)
-- **Web interface** for remote access
 
 ### Architecture Improvements
 - **API endpoints** for external integration

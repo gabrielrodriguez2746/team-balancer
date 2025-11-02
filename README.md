@@ -12,10 +12,9 @@ A modern, robust football team balancing system with advanced features for creat
 - **Real-time Validation**: Comprehensive data validation and error handling
 
 ### Advanced Features
-- **Modern UI**: Clean, responsive interface with filtering and export capabilities
+- **Modern Web UI**: Clean, responsive Streamlit web interface with filtering and export capabilities
 - **Data Persistence**: JSON-based player data storage with backup functionality
 - **Configuration Management**: Flexible configuration system with file-based settings
-- **Comprehensive Testing**: Full test suite with unit and integration tests
 - **Logging**: Detailed logging for debugging and monitoring
 
 ## 🏗️ Architecture
@@ -87,19 +86,7 @@ class DataManager:
 - **Data Validation**: Comprehensive validation of player data
 - **Backup System**: Automatic backup creation and restoration
 
-#### 6. **Modern UI** (`team_balancer_ui.py`)
-```python
-class ModernTeamBalancerUI:
-    def _show_main_screen(self)
-    def _show_players_screen(self)
-    def _show_create_teams_screen(self)
-    def _show_results_screen(self)
-```
-
-- **Multi-Screen Workflow**: Guided step-by-step team creation
-- **Player Management**: Full CRUD operations with multi-selection
-
-#### 7. **Streamlit Web UI** (`team_balancer_streamlit.py`)
+#### 6. **Streamlit Web UI** (`team_balancer_streamlit.py`)
 ```python
 class StreamlitTeamBalancerUI:
     def run(self)
@@ -152,19 +139,23 @@ class Position(Enum):
 
 ### Prerequisites
 - Python 3.8+
-- tkinter (usually included with Python)
+- Required packages (see requirements.txt)
 
 ### Quick Start
 ```bash
-# Run the modern UI
-python team_balancer_ui.py
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the Streamlit web app
+python run_streamlit.py
+# or
+streamlit run team_balancer_streamlit.py
 
 # Run the command-line version
 python team_balancer.py
-
-# Run tests
-python test_team_balancer_new.py
 ```
+
+Then open your browser to `http://localhost:8501`
 
 ### Configuration
 1. **Basic Settings**: Edit `config.py` or use the UI
@@ -190,26 +181,6 @@ player_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 combinations = balancer.generate_balanced_teams(player_ids)
 ```
 
-## 🧪 Testing
-
-### Test Coverage
-- **Unit Tests**: Individual component testing
-- **Integration Tests**: End-to-end workflow testing
-- **Data Validation**: Player and configuration validation
-- **Error Handling**: Exception and edge case testing
-
-### Running Tests
-```bash
-# Run all tests
-python -m unittest test_team_balancer_new.py -v
-
-# Run specific test class
-python -m unittest test_team_balancer_new.TestPlayerModel -v
-
-# Run with coverage (if coverage.py is installed)
-coverage run -m unittest test_team_balancer_new.py
-coverage report
-```
 
 ## 🔧 Configuration Options
 
@@ -254,12 +225,6 @@ streamlit run team_balancer_streamlit.py
 ```
 Then open your browser to `http://localhost:8501`
 
-#### Option 2: Traditional Desktop Interface
-```bash
-# Run the Tkinter desktop app
-python team_balancer_ui.py
-```
-
 ### Why Streamlit?
 The Streamlit version provides:
 - ✅ **No widget errors** - Eliminates Tkinter reference issues
@@ -272,14 +237,12 @@ The Streamlit version provides:
 ```
 footbal/
 ├── team_balancer.py              # Core balancing logic and models
-├── team_balancer_ui.py           # Traditional Tkinter GUI interface
-├── team_balancer_streamlit.py    # Modern Streamlit web interface
+├── team_balancer_streamlit.py    # Streamlit web interface
 ├── run_streamlit.py              # Streamlit launcher script
 ├── config.py                     # Configuration management
 ├── data_manager.py               # Data persistence and validation
 ├── player_manager.py             # Command-line player management
 ├── initialize_data.py            # Data initialization script
-├── test_team_balancer_new.py     # Comprehensive test suite
 ├── requirements.txt              # Python dependencies
 ├── DOCUMENTATION.md              # Main documentation index
 ├── README.md                     # This file
@@ -337,7 +300,6 @@ logging.basicConfig(level=logging.DEBUG)
 - Follow PEP 8 style guidelines
 - Add type hints to all functions
 - Include docstrings for all classes and methods
-- Write comprehensive tests
 
 ## 📄 License
 
