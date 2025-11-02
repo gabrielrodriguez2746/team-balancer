@@ -637,5 +637,17 @@
       "stamina": 3.0,
       "speed": 3.0
     }
+  },
+  {
+    "Id": 42,
+    "Name": "Amigo Oscar",
+    "Position": [
+      "MF"
+    ],
+    "Stats": {
+      "level": 3.0,
+      "stamina": 2.3,
+      "speed": 2.4
+    }
   }
 ]

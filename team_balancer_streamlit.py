@@ -1027,7 +1027,7 @@ class StreamlitTeamBalancerUI:
                     team_total = sum(p.stats.level + p.stats.stamina + p.stats.speed for p in team)
                     print(f"\n{color} TEAM {team_idx + 1} (Total: {team_total:.1f})")
                     for player in team:
-                        print(f"   • {player.name} (Level: {player.stats.level}, Pos: {self._format_positions(player)})")
+                        print(f"   • {player.name}")
                 
                 print("-" * 60)
             
