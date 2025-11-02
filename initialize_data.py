@@ -86,8 +86,7 @@ def initialize_data_directory():
     print(f"✅ Created {config.config_file}")
     
     # Show some statistics
-    data_manager.registry = registry
-    stats = data_manager.get_player_statistics()
+    stats = data_manager.get_player_statistics(players)
     print(f"\n📊 Player Statistics:")
     print(f"   Total Players: {stats['total_players']}")
     print(f"   Average Level: {stats['level_stats']['avg']:.2f}")

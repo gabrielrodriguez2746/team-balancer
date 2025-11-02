@@ -253,39 +253,26 @@ class TeamBalancer:
         
         # Check must-be-separate constraints
         for group in self.config.must_be_on_different_teams:
-            # Count how many teams contain all players from this group
-            teams_with_all_players = 0
-            for team_ids in team_ids_sets:
-                if all(pid in team_ids for pid in group):
-                    teams_with_all_players += 1
-            
             # If any team contains all players from the group, constraint is violated
-            if teams_with_all_players > 0:
+            if any(all(pid in team_ids for pid in group) for team_ids in team_ids_sets):
                 return False
         
         # Check must-be-same constraints
         for group in self.config.must_be_on_same_teams:
-            # Check if all players in group are on the same team
-            found_on_same_team = False
-            for team_ids in team_ids_sets:
-                if all(pid in team_ids for pid in group):
-                    found_on_same_team = True
-                    break
-            
-            if not found_on_same_team:
+            # All players in group must be on the same team
+            if not any(all(pid in team_ids for pid in group) for team_ids in team_ids_sets):
                 return False
 
         # Check must-be-same-on-specific-team constraints (1-based team index)
-        if self.config.must_be_on_same_teams_by_team:
-            for team_index_1_based, groups in self.config.must_be_on_same_teams_by_team.items():
-                # Validate index points to an existing team
-                if not (1 <= team_index_1_based <= len(team_ids_sets)):
-                    logger.warning(f"Configured team index {team_index_1_based} is out of range for current teams; failing combination.")
-                    return False
-                team_ids = team_ids_sets[team_index_1_based - 1]
-                for group in groups:
-                    if not all(pid in team_ids for pid in group):
-                        return False
+        for team_index_1_based, groups in self.config.must_be_on_same_teams_by_team.items():
+            # Validate index points to an existing team
+            if not (1 <= team_index_1_based <= len(team_ids_sets)):
+                logger.warning(f"Configured team index {team_index_1_based} is out of range for current teams; failing combination.")
+                return False
+            team_ids = team_ids_sets[team_index_1_based - 1]
+            # All groups must have all players on the specified team
+            if not all(all(pid in team_ids for pid in group) for group in groups):
+                return False
         
         return True
     
@@ -336,33 +323,38 @@ class TeamBalancer:
             total_balance_score=total_balance_score
         )
     
-    def _estimate_num_combinations(self, n_players, n_teams, team_size):
+    def _estimate_num_combinations(self, n_players: int, n_teams: int, team_size: int) -> int:
         """Estimate the number of ways to split n_players into n_teams of team_size each (unordered teams)"""
-        from math import comb, factorial
         numerator = math.factorial(n_players)
         denominator = (math.factorial(team_size) ** n_teams) * math.factorial(n_teams)
         return numerator // denominator
 
     def _generate_random_team_combinations(self, players: List[Player], num_teams: int, team_size: int, n_samples: int = 10000) -> List[List[List[Player]]]:
         """Generate random team combinations (for large N)"""
-        all_players = players[:]
-        combinations_set = set()
+        seen_combinations = set()
         results = []
         max_attempts = n_samples * 10
-        attempts = 0
-        while len(results) < n_samples and attempts < max_attempts:
-            attempts += 1
-            random.shuffle(all_players)
-            teams = [all_players[i*team_size:(i+1)*team_size] for i in range(num_teams)]
+        
+        for attempt in range(max_attempts):
+            if len(results) >= n_samples:
+                break
+                
+            shuffled = players.copy()
+            random.shuffle(shuffled)
+            teams = [shuffled[i*team_size:(i+1)*team_size] for i in range(num_teams)]
+            
             # Ensure all teams have correct size
             if any(len(team) != team_size for team in teams):
                 continue
+            
             # Use sorted tuple of sorted player IDs for uniqueness
-            key = tuple(tuple(sorted(p.player_id for p in team)) for team in teams)
-            if key in combinations_set:
+            combination_key = tuple(tuple(sorted(p.player_id for p in team)) for team in teams)
+            if combination_key in seen_combinations:
                 continue
-            combinations_set.add(key)
-            results.append([team[:] for team in teams])
+                
+            seen_combinations.add(combination_key)
+            results.append([team.copy() for team in teams])
+            
         return results
 
     def _generate_team_combinations(self, players: List[Player]) -> List[List[List[Player]]]:
@@ -401,25 +393,22 @@ class TeamBalancer:
         return list(distribute_players(players, num_teams, []))
 
     def _calculate_team_diversity(self, combination: TeamCombination, existing_combinations: List[TeamCombination]) -> float:
-        """Calculate how different this combination is from existing ones"""
+        """Calculate how different this combination is from existing ones (1.0 = completely different, 0.0 = identical)"""
         if not existing_combinations:
-            return 1.0  # First combination is always diverse
+            return 1.0
         
-        # Calculate diversity based on player overlap
         current_team_sets = [set(p.player_id for p in team) for team in combination.teams]
-        
         max_overlap = 0.0
+        
         for existing in existing_combinations:
             existing_team_sets = [set(p.player_id for p in team) for team in existing.teams]
-            
             # Calculate overlap for each team pairing
             for current_team in current_team_sets:
                 for existing_team in existing_team_sets:
-                    if len(current_team) > 0 and len(existing_team) > 0:
+                    if current_team and existing_team:
                         overlap = len(current_team & existing_team) / len(current_team | existing_team)
                         max_overlap = max(max_overlap, overlap)
         
-        # Return diversity score (1.0 = completely different, 0.0 = identical)
         return 1.0 - max_overlap
 
     def generate_balanced_teams(self, player_ids: List[int]) -> List[TeamCombination]:
@@ -452,21 +441,18 @@ class TeamBalancer:
         
         # Apply diversity filter to get varied combinations
         diverse_combinations = []
-        min_diversity_score = max(0.1, 1.0 - (self.config.diversity_threshold / 2.0))  # Much more permissive
+        min_diversity_score = max(0.1, 1.0 - (self.config.diversity_threshold / 2.0))
+        max_options = self.config.top_n_teams * 3
         
-        for i, combination in enumerate(valid_combinations):
-            if len(diverse_combinations) == 0:
+        for combination in valid_combinations:
+            if not diverse_combinations:
                 # Always include the best balanced combination
                 diverse_combinations.append(combination)
             else:
-                # Check if this combination is diverse enough
                 diversity_score = self._calculate_team_diversity(combination, diverse_combinations)
-                
                 if diversity_score >= min_diversity_score:
                     diverse_combinations.append(combination)
-                
-                # Stop when we have enough diverse combinations
-                if len(diverse_combinations) >= self.config.top_n_teams * 3:  # Get more options
+                if len(diverse_combinations) >= max_options:
                     break
         
         logger.info(f"Found {len(diverse_combinations)} diverse combinations")

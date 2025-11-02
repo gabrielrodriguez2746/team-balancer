@@ -47,17 +47,42 @@ class StreamlitTeamBalancerUI:
         # Load existing players
         self._load_players()
         
-        # Initialize session state
-        if 'selected_players' not in st.session_state:
-            st.session_state.selected_players = set()
-        if 'together_players' not in st.session_state:
-            st.session_state.together_players = set()
-        if 'separate_players' not in st.session_state:
-            st.session_state.separate_players = set()
-        if 'team_size' not in st.session_state:
-            st.session_state.team_size = 6
-        if 'current_page' not in st.session_state:
-            st.session_state.current_page = "main"
+        self._initialize_session_state()
+    
+    def _initialize_session_state(self):
+        """Initialize session state variables"""
+        defaults = {
+            'selected_players': set(),
+            'together_players': set(),
+            'separate_players': set(),
+            'team_size': 6,
+            'current_page': "main"
+        }
+        for key, value in defaults.items():
+            if key not in st.session_state:
+                st.session_state[key] = value
+    
+    def _player_to_dict(self, player: Player, include_total: bool = False) -> Dict:
+        """Convert player to dictionary for DataFrame"""
+        data = {
+            'ID': player.player_id,
+            'Name': player.name,
+            'Positions': ', '.join([pos.value for pos in player.positions]),
+            'Level': player.stats.level,
+            'Stamina': player.stats.stamina,
+            'Speed': player.stats.speed
+        }
+        if include_total:
+            data['Total Stats'] = player.stats.level + player.stats.stamina + player.stats.speed
+        return data
+    
+    def _players_to_dataframe(self, players: List[Player], include_total: bool = False) -> pd.DataFrame:
+        """Convert list of players to pandas DataFrame"""
+        return pd.DataFrame([self._player_to_dict(p, include_total) for p in players])
+    
+    def _format_positions(self, player: Player) -> str:
+        """Format player positions as comma-separated string"""
+        return ', '.join([pos.value for pos in player.positions])
     
     def _load_players(self):
         """Load players from file"""
@@ -221,18 +246,7 @@ class StreamlitTeamBalancerUI:
             players = self.player_registry.get_all_players()
             
             if players:
-                # Player stats
-                stats_data = []
-                for player in players:
-                    stats_data.append({
-                        'Name': player.name,
-                        'Level': player.stats.level,
-                        'Stamina': player.stats.stamina,
-                        'Speed': player.stats.speed,
-                        'Positions': ', '.join([pos.value for pos in player.positions])
-                    })
-                
-                df = pd.DataFrame(stats_data)
+                df = self._players_to_dataframe(players)
                 
                 # Average stats
                 avg_level = df['Level'].mean()
@@ -250,7 +264,7 @@ class StreamlitTeamBalancerUI:
         if players:
             recent_players = players[-5:]  # Last 5 players
             for player in recent_players:
-                st.markdown(f"**{player.name}** - Level {player.stats.level} - {', '.join([pos.value for pos in player.positions])}")
+                st.markdown(f"**{player.name}** - Level {player.stats.level} - {self._format_positions(player)}")
         else:
             st.info("No recent activity. Start by adding players!")
     
@@ -279,20 +293,7 @@ class StreamlitTeamBalancerUI:
         players = self.player_registry.get_all_players()
         
         if players:
-            # Convert to DataFrame for better display
-            player_data = []
-            for player in players:
-                            player_data.append({
-                'ID': player.player_id,
-                'Name': player.name,
-                'Positions': ', '.join([pos.value for pos in player.positions]),
-                'Level': player.stats.level,
-                'Stamina': player.stats.stamina,
-                'Speed': player.stats.speed,
-                'Total Stats': player.stats.level + player.stats.stamina + player.stats.speed
-            })
-            
-            df = pd.DataFrame(player_data)
+            df = self._players_to_dataframe(players, include_total=True)
             
             # Display with selection
             st.markdown("### 📋 Player List")
@@ -684,7 +685,7 @@ class StreamlitTeamBalancerUI:
         selected_player_ids = st.multiselect(
             "Select players for teams:",
             options=df['ID'].tolist(),
-            format_func=lambda x: f"{df[df['ID'] == x]['Name'].iloc[0]} (Level: {df[df['ID'] == x]['Level'].iloc[0]:.1f}, Total: {df[df['ID'] == x]['Total'].iloc[0]:.1f})"
+            format_func=lambda pid: f"{df[df['ID'] == pid]['Name'].iloc[0]} (Level: {df[df['ID'] == pid]['Level'].iloc[0]:.1f}, Total: {df[df['ID'] == pid]['Total'].iloc[0]:.1f})"
         )
         
         # Update selected players
@@ -693,8 +694,7 @@ class StreamlitTeamBalancerUI:
         # Display selected players
         if st.session_state.selected_players:
             st.markdown("### ✅ Selected Players")
-            selected_players_data = [row for i, row in df.iterrows() if row['ID'] in st.session_state.selected_players]
-            selected_df = pd.DataFrame(selected_players_data)
+            selected_df = df[df['ID'].isin(st.session_state.selected_players)]
             st.dataframe(selected_df, use_container_width=True, hide_index=True)
         
         # Continue button
@@ -1027,7 +1027,7 @@ class StreamlitTeamBalancerUI:
                     team_total = sum(p.stats.level + p.stats.stamina + p.stats.speed for p in team)
                     print(f"\n{color} TEAM {team_idx + 1} (Total: {team_total:.1f})")
                     for player in team:
-                        print(f"   • {player.name} (Level: {player.stats.level}, Pos: {', '.join([pos.value for pos in player.positions])})")
+                        print(f"   • {player.name} (Level: {player.stats.level}, Pos: {self._format_positions(player)})")
                 
                 print("-" * 60)
             

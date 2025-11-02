@@ -18,7 +18,6 @@ class DataManager:
     
     def __init__(self, config: AppConfig):
         self.config = config
-        self.registry = PlayerRegistry()
     
     def save_players(self, players: List[Player]) -> None:
         """Save players to JSON file"""
@@ -56,18 +55,10 @@ class DataManager:
             logger.error(f"Error loading players: {e}")
             raise
     
-    def load_players_to_registry(self) -> PlayerRegistry:
-        """Load players into registry"""
-        players = self.load_players()
-        for player in players:
-            self.registry.add_player(player)
-        return self.registry
-    
-    def export_players_csv(self, output_file: Path) -> None:
+    def export_players_csv(self, output_file: Path, players: List[Player]) -> None:
         """Export players to CSV format"""
         try:
             import csv
-            players = self.registry.get_all_players()
             
             with open(output_file, 'w', newline='', encoding='utf-8') as f:
                 writer = csv.writer(f)
@@ -127,13 +118,13 @@ class DataManager:
             logger.error(f"Error importing players from CSV: {e}")
             raise
     
-    def backup_players(self, backup_file: Optional[Path] = None) -> Path:
+    def backup_players(self, players: List[Player], backup_file: Optional[Path] = None) -> Path:
         """Create a backup of current players"""
         if backup_file is None:
-            timestamp = Path().cwd().name
+            from datetime import datetime
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             backup_file = self.config.data_dir / f"players_backup_{timestamp}.json"
         
-        players = self.registry.get_all_players()
         self.save_players(players)
         
         # Copy to backup location
@@ -158,23 +149,13 @@ class DataManager:
         if duplicate_ids:
             errors.append(f"Duplicate player IDs: {duplicate_ids}")
         
-        # Check for invalid stats
-        for player in players:
-            try:
-                # This will raise ValueError if stats are invalid
-                _ = PlayerStats(
-                    level=player.stats.level,
-                    stamina=player.stats.stamina,
-                    speed=player.stats.speed
-                )
-            except ValueError as e:
-                errors.append(f"Invalid stats for {player.name}: {e}")
+        # Check for invalid stats (PlayerStats validation already handles range checks)
+        # No need to re-validate since Player.__post_init__ ensures stats are valid
         
         return errors
     
-    def get_player_statistics(self) -> Dict:
+    def get_player_statistics(self, players: List[Player]) -> Dict:
         """Get statistics about current players"""
-        players = self.registry.get_all_players()
         
         if not players:
             return {"total_players": 0}

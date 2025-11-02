@@ -52,21 +52,22 @@ class PlayerManager:
         
         print("-" * 80)
     
+    def _remove_player(self, player: Player) -> bool:
+        """Internal helper to remove a player"""
+        player_id = player.player_id
+        player_name = player.name
+        self.registry.remove_player(player_id)
+        self._save_changes()
+        logger.info(f"✅ Removed player: {player_name} (ID: {player_id})")
+        return True
+    
     def remove_player_by_id(self, player_id: int) -> bool:
         """Remove a player by ID"""
         player = self.registry.get_player(player_id)
         if not player:
             logger.error(f"Player with ID {player_id} not found")
             return False
-        
-        # Remove from registry
-        self.registry.remove_player(player_id)
-        
-        # Save updated data
-        self._save_changes()
-        
-        logger.info(f"✅ Removed player: {player.name} (ID: {player_id})")
-        return True
+        return self._remove_player(player)
     
     def remove_player_by_name(self, name: str) -> bool:
         """Remove a player by name (exact match)"""
@@ -74,15 +75,27 @@ class PlayerManager:
         if not player:
             logger.error(f"Player '{name}' not found")
             return False
+        return self._remove_player(player)
+    
+    def _confirm_and_remove_players(self, players_to_remove: List[Player], reason: str) -> int:
+        """Helper to confirm and remove multiple players"""
+        if not players_to_remove:
+            return 0
         
-        # Remove from registry
-        self.registry.remove_player(player.player_id)
+        print(f"\n🗑️  Found {len(players_to_remove)} players {reason}:")
+        for player in players_to_remove:
+            print(f"  - {player.name} (ID: {player.player_id})")
         
-        # Save updated data
-        self._save_changes()
+        confirm = input(f"\n❓ Remove all {len(players_to_remove)} players? (y/N): ").strip().lower()
+        if confirm != 'y':
+            logger.info("Removal cancelled")
+            return 0
         
-        logger.info(f"✅ Removed player: {player.name} (ID: {player.player_id})")
-        return True
+        for player in players_to_remove:
+            self._remove_player(player)
+        
+        logger.info(f"✅ Removed {len(players_to_remove)} players {reason}")
+        return len(players_to_remove)
     
     def remove_players_by_position(self, position: str) -> int:
         """Remove all players with a specific position"""
@@ -93,34 +106,13 @@ class PlayerManager:
             logger.info(f"Valid positions: {[p.value for p in Position]}")
             return 0
         
-        players_to_remove = []
-        for player in self.registry.get_all_players():
-            if pos_enum in player.positions:
-                players_to_remove.append(player)
+        players_to_remove = [p for p in self.registry.get_all_players() if pos_enum in p.positions]
         
         if not players_to_remove:
             logger.info(f"No players found with position {position}")
             return 0
         
-        # Confirm removal
-        print(f"\n🗑️  Found {len(players_to_remove)} players with position {position}:")
-        for player in players_to_remove:
-            print(f"  - {player.name} (ID: {player.player_id})")
-        
-        confirm = input(f"\n❓ Remove all {len(players_to_remove)} players? (y/N): ").strip().lower()
-        if confirm != 'y':
-            logger.info("Removal cancelled")
-            return 0
-        
-        # Remove players
-        for player in players_to_remove:
-            self.registry.remove_player(player.player_id)
-        
-        # Save updated data
-        self._save_changes()
-        
-        logger.info(f"✅ Removed {len(players_to_remove)} players with position {position}")
-        return len(players_to_remove)
+        return self._confirm_and_remove_players(players_to_remove, f"with position {position}")
     
     def remove_players_by_stats_threshold(self, stat_name: str, threshold: float, 
                                         remove_below: bool = True) -> int:
@@ -129,41 +121,18 @@ class PlayerManager:
             logger.error(f"Invalid stat: {stat_name}. Valid stats: level, stamina, speed")
             return 0
         
-        players_to_remove = []
-        for player in self.registry.get_all_players():
-            stat_value = getattr(player.stats, stat_name)
-            
-            if remove_below and stat_value < threshold:
-                players_to_remove.append(player)
-            elif not remove_below and stat_value > threshold:
-                players_to_remove.append(player)
+        comparison = "below" if remove_below else "above"
+        players_to_remove = [
+            p for p in self.registry.get_all_players()
+            if (remove_below and getattr(p.stats, stat_name) < threshold) or
+               (not remove_below and getattr(p.stats, stat_name) > threshold)
+        ]
         
         if not players_to_remove:
-            comparison = "below" if remove_below else "above"
             logger.info(f"No players found with {stat_name} {comparison} {threshold}")
             return 0
         
-        # Confirm removal
-        comparison = "below" if remove_below else "above"
-        print(f"\n🗑️  Found {len(players_to_remove)} players with {stat_name} {comparison} {threshold}:")
-        for player in players_to_remove:
-            stat_value = getattr(player.stats, stat_name)
-            print(f"  - {player.name} (ID: {player.player_id}): {stat_name} = {stat_value:.1f}")
-        
-        confirm = input(f"\n❓ Remove all {len(players_to_remove)} players? (y/N): ").strip().lower()
-        if confirm != 'y':
-            logger.info("Removal cancelled")
-            return 0
-        
-        # Remove players
-        for player in players_to_remove:
-            self.registry.remove_player(player.player_id)
-        
-        # Save updated data
-        self._save_changes()
-        
-        logger.info(f"✅ Removed {len(players_to_remove)} players with {stat_name} {comparison} {threshold}")
-        return len(players_to_remove)
+        return self._confirm_and_remove_players(players_to_remove, f"with {stat_name} {comparison} {threshold}")
     
     def remove_inactive_players(self, player_ids: List[int]) -> int:
         """Remove specific players by ID list (for inactive players)"""
@@ -188,25 +157,7 @@ class PlayerManager:
             logger.info("No valid players found to remove")
             return 0
         
-        # Confirm removal
-        print(f"\n🗑️  Found {len(players_to_remove)} players to remove:")
-        for player in players_to_remove:
-            print(f"  - {player.name} (ID: {player.player_id})")
-        
-        confirm = input(f"\n❓ Remove all {len(players_to_remove)} players? (y/N): ").strip().lower()
-        if confirm != 'y':
-            logger.info("Removal cancelled")
-            return 0
-        
-        # Remove players
-        for player in players_to_remove:
-            self.registry.remove_player(player.player_id)
-        
-        # Save updated data
-        self._save_changes()
-        
-        logger.info(f"✅ Removed {len(players_to_remove)} inactive players")
-        return len(players_to_remove)
+        return self._confirm_and_remove_players(players_to_remove, "from inactive list")
     
     def interactive_removal(self) -> None:
         """Interactive player removal mode"""
@@ -266,9 +217,8 @@ class PlayerManager:
     
     def backup_before_removal(self) -> Path:
         """Create backup before removal operations"""
-        import time
-        backup_file = self.config.data_dir / f"players_backup_{int(time.time())}.json"
-        self.data_manager.backup_players(backup_file)
+        players = self.registry.get_all_players()
+        backup_file = self.data_manager.backup_players(players)
         logger.info(f"📦 Backup created: {backup_file}")
         return backup_file
     
