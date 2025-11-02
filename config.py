@@ -14,8 +14,8 @@ class AppConfig:
     # Team settings
     team_size: int = 6
     num_teams: int = 2  # NEW: Number of teams to generate
-    top_n_teams: int = 3
-    diversity_threshold: float = 3.0
+    top_n_teams: int = 5  # Increased to show more options
+    diversity_threshold: float = 1.5  # Lowered to allow more diverse combinations
     
     # Player constraints
     must_be_on_different_teams: List[List[int]] = field(default_factory=lambda: [[15, 23]])

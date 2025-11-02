@@ -110,8 +110,8 @@ class TeamBalancerConfig:
     """
     team_size: int = 6
     num_teams: int = 2  # Number of teams to generate
-    top_n_teams: int = 3
-    diversity_threshold: float = 3.0
+    top_n_teams: int = 5  # Increased to show more options
+    diversity_threshold: float = 1.5  # Lowered to allow more diverse combinations
     must_be_on_different_teams: List[List[int]] = field(default_factory=lambda: [[15, 23]])
     must_be_on_same_teams: List[List[int]] = field(default_factory=list)
     must_be_on_same_teams_by_team: Dict[int, List[List[int]]] = field(default_factory=dict)
@@ -400,6 +400,28 @@ class TeamBalancer:
         
         return list(distribute_players(players, num_teams, []))
 
+    def _calculate_team_diversity(self, combination: TeamCombination, existing_combinations: List[TeamCombination]) -> float:
+        """Calculate how different this combination is from existing ones"""
+        if not existing_combinations:
+            return 1.0  # First combination is always diverse
+        
+        # Calculate diversity based on player overlap
+        current_team_sets = [set(p.player_id for p in team) for team in combination.teams]
+        
+        max_overlap = 0.0
+        for existing in existing_combinations:
+            existing_team_sets = [set(p.player_id for p in team) for team in existing.teams]
+            
+            # Calculate overlap for each team pairing
+            for current_team in current_team_sets:
+                for existing_team in existing_team_sets:
+                    if len(current_team) > 0 and len(existing_team) > 0:
+                        overlap = len(current_team & existing_team) / len(current_team | existing_team)
+                        max_overlap = max(max_overlap, overlap)
+        
+        # Return diversity score (1.0 = completely different, 0.0 = identical)
+        return 1.0 - max_overlap
+
     def generate_balanced_teams(self, player_ids: List[int]) -> List[TeamCombination]:
         """Generate balanced teams from player IDs"""
         players = self.player_registry.get_players_by_ids(player_ids)
@@ -425,16 +447,31 @@ class TeamBalancer:
         
         logger.info(f"Found {len(valid_combinations)} valid combinations")
         
-        # Apply diversity filter (simplified for multiple teams)
+        # Sort by balance score first (best balanced teams first)
+        valid_combinations.sort(key=lambda x: x.balance.total_balance_score)
+        
+        # Apply diversity filter to get varied combinations
         diverse_combinations = []
-        for combination in valid_combinations:
-            if len(diverse_combinations) < self.config.top_n_teams * 2:  # Keep more for diversity
+        min_diversity_score = max(0.1, 1.0 - (self.config.diversity_threshold / 2.0))  # Much more permissive
+        
+        for i, combination in enumerate(valid_combinations):
+            if len(diverse_combinations) == 0:
+                # Always include the best balanced combination
                 diverse_combinations.append(combination)
+            else:
+                # Check if this combination is diverse enough
+                diversity_score = self._calculate_team_diversity(combination, diverse_combinations)
+                
+                if diversity_score >= min_diversity_score:
+                    diverse_combinations.append(combination)
+                
+                # Stop when we have enough diverse combinations
+                if len(diverse_combinations) >= self.config.top_n_teams * 3:  # Get more options
+                    break
         
         logger.info(f"Found {len(diverse_combinations)} diverse combinations")
         
-        # Sort by balance score and return top N
-        diverse_combinations.sort(key=lambda x: x.balance.total_balance_score)
+        # Return top N diverse combinations (already sorted by balance)
         return diverse_combinations[:self.config.top_n_teams]
 
 class TeamBalancerDisplay:

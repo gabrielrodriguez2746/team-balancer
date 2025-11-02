@@ -625,5 +625,17 @@
       "stamina": 3.0,
       "speed": 3.7
     }
+  },
+  {
+    "Id": 41,
+    "Name": "Juancho Christian",
+    "Position": [
+      "MF"
+    ],
+    "Stats": {
+      "level": 3.0,
+      "stamina": 3.0,
+      "speed": 3.0
+    }
   }
 ]
