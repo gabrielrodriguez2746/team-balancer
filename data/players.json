@@ -685,5 +685,17 @@
       "stamina": 3.5,
       "speed": 3.0
     }
+  },
+  {
+    "Id": 46,
+    "Name": "Richard (Gabo)",
+    "Position": [
+      "DF"
+    ],
+    "Stats": {
+      "level": 3.0,
+      "stamina": 2.3,
+      "speed": 2.5
+    }
   }
 ]
