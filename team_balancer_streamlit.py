@@ -1106,7 +1106,18 @@ class StreamlitTeamBalancerUI:
                                 })
                             
                             team_df = pd.DataFrame(team_players)
-                            st.dataframe(team_df, use_container_width=True, hide_index=True)
+                            st.dataframe(
+                                team_df, 
+                                use_container_width=True, 
+                                hide_index=True,
+                                column_config={
+                                    "Name": st.column_config.TextColumn("Name", width="medium"),
+                                    "Level": st.column_config.NumberColumn("Level", format="%.1f", width="small"),
+                                    "Stamina": st.column_config.NumberColumn("Stamina", format="%.1f", width="small"),
+                                    "Speed": st.column_config.NumberColumn("Speed", format="%.1f", width="small"),
+                                    "Total": st.column_config.NumberColumn("Total", format="%.1f", width="small")
+                                }
+                            )
                             
                             # Team stats
                             team_avg_level = team_df['Level'].mean()
@@ -1240,6 +1251,17 @@ class StreamlitTeamBalancerUI:
             if team_idx < num_teams - 1:  # Add separator color
                 cell_colors.append('#FFFFFF')
         
+        # Create fill_color structure for Plotly table
+        # Since table_data is transposed (columns), fill_color should be per column
+        # Each column should have the same color repeated for all rows
+        num_cols = len(combined_header)
+        fill_color_per_column = []
+        for col_idx in range(num_cols):
+            # Get the color for this column
+            col_color = cell_colors[col_idx] if col_idx < len(cell_colors) else '#FFFFFF'
+            # Repeat this color for all rows in this column
+            fill_color_per_column.append([col_color] * max_rows)
+        
         # Add table to figure
         fig.add_trace(go.Table(
             header=dict(
@@ -1251,8 +1273,8 @@ class StreamlitTeamBalancerUI:
             ),
             cells=dict(
                 values=table_data,
-                fill_color=[cell_colors * max_rows] if cell_colors else [],
-                font=dict(size=12, family='Arial'),
+                fill_color=fill_color_per_column if fill_color_per_column else 'white',
+                font=dict(color='#000000', size=12, family='Arial', weight='bold'),
                 align='center',
                 height=35
             )
