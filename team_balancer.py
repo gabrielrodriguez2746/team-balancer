@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 from itertools import combinations
-from typing import List, Dict, Set, Tuple, Optional, NamedTuple
+from typing import List, Dict, Set, Tuple, Optional, NamedTuple, Any
 import sys
 from pathlib import Path
 import json
@@ -329,11 +329,11 @@ class TeamBalancer:
         denominator = (math.factorial(team_size) ** n_teams) * math.factorial(n_teams)
         return numerator // denominator
 
-    def _generate_random_team_combinations(self, players: List[Player], num_teams: int, team_size: int, n_samples: int = 10000) -> List[List[List[Player]]]:
-        """Generate random team combinations (for large N)"""
+    def _generate_random_team_combinations(self, players: List[Player], num_teams: int, team_size: int, n_samples: int = 50000) -> List[List[List[Player]]]:
+        """Generate random team combinations (for large N) - increased samples for better diversity"""
         seen_combinations = set()
         results = []
-        max_attempts = n_samples * 10
+        max_attempts = n_samples * 20  # Increased attempts to find unique combinations
         
         for attempt in range(max_attempts):
             if len(results) >= n_samples:
@@ -354,7 +354,8 @@ class TeamBalancer:
                 
             seen_combinations.add(combination_key)
             results.append([team.copy() for team in teams])
-            
+        
+        logger.info(f"Generated {len(results)} unique random combinations")
         return results
 
     def _generate_team_combinations(self, players: List[Player]) -> List[List[List[Player]]]:
@@ -368,10 +369,12 @@ class TeamBalancer:
             raise ValueError(f"Not enough players: need {total_needed}, have {len(players)}")
         # Estimate number of combinations
         n_combos = self._estimate_num_combinations(len(players), num_teams, team_size)
-        MAX_COMBINATIONS = 100000
+        MAX_COMBINATIONS = 50000  # Lower threshold to use random sampling more often for better diversity
         if n_combos > MAX_COMBINATIONS:
-            logger.info(f"Too many combinations ({n_combos}), using random sampling.")
-            return self._generate_random_team_combinations(players, num_teams, team_size, n_samples=10000)
+            # Use more samples to increase probability of finding diverse combinations
+            sample_size = min(50000, n_combos // 10)  # Sample 10% or up to 50k
+            logger.info(f"Too many combinations ({n_combos}), using random sampling with {sample_size} samples.")
+            return self._generate_random_team_combinations(players, num_teams, team_size, n_samples=sample_size)
         # Generate all ways to divide players into teams
         def distribute_players(remaining_players, teams_left, current_combination):
             if teams_left == 0:
@@ -392,24 +395,149 @@ class TeamBalancer:
         
         return list(distribute_players(players, num_teams, []))
 
-    def _calculate_team_diversity(self, combination: TeamCombination, existing_combinations: List[TeamCombination]) -> float:
-        """Calculate how different this combination is from existing ones (1.0 = completely different, 0.0 = identical)"""
+    def _calculate_team_diversity(self, combination: TeamCombination, existing_combinations: List[TeamCombination], enforce_3_player_limit: bool = True) -> float:
+        """Calculate how different this combination is from existing ones (1.0 = completely different, 0.0 = identical)
+        
+        Logic: A combination is valid if no team in it shares more than 3 players with any team 
+        from any existing combination.
+        
+        Args:
+            combination: The combination to evaluate
+            existing_combinations: List of already selected combinations
+            enforce_3_player_limit: If True, returns -1.0 if any team shares >3 players with any existing team (reject). If False, calculates score anyway.
+        """
         if not existing_combinations:
             return 1.0
         
         current_team_sets = [set(p.player_id for p in team) for team in combination.teams]
         max_overlap = 0.0
+        max_team_overlap = 0  # Track maximum overlap between any two specific teams
         
         for existing in existing_combinations:
             existing_team_sets = [set(p.player_id for p in team) for team in existing.teams]
-            # Calculate overlap for each team pairing
+            
+            # Check each team in new combination against each team in existing combination
             for current_team in current_team_sets:
                 for existing_team in existing_team_sets:
                     if current_team and existing_team:
-                        overlap = len(current_team & existing_team) / len(current_team | existing_team)
-                        max_overlap = max(max_overlap, overlap)
+                        # Count overlapping players between these two specific teams
+                        overlap_count = len(current_team & existing_team)
+                        max_team_overlap = max(max_team_overlap, overlap_count)
+                        
+                        # Calculate overlap percentage for diversity score
+                        overlap_ratio = overlap_count / len(current_team | existing_team)
+                        max_overlap = max(max_overlap, overlap_ratio)
+            
+            # If enforcing 3-player limit and any team pair has more than 3 overlapping players, reject
+            if enforce_3_player_limit and max_team_overlap > 3:
+                return -1.0
         
-        return 1.0 - max_overlap
+        diversity = 1.0 - max_overlap
+        
+        # If not enforcing limit but max team overlap > 3, penalize the score
+        if not enforce_3_player_limit and max_team_overlap > 3:
+            # Heavily penalize but don't completely reject
+            penalty = (max_team_overlap - 3) * 0.2
+            diversity = max(0.0, diversity - penalty)
+        
+        return diversity
+
+    def _combinations_equal(self, combo1: TeamCombination, combo2: TeamCombination) -> bool:
+        """Check if two combinations are identical (same teams)"""
+        if len(combo1.teams) != len(combo2.teams):
+            return False
+        
+        # Compare team sets (order-independent)
+        combo1_teams = [tuple(sorted(p.player_id for p in team)) for team in combo1.teams]
+        combo2_teams = [tuple(sorted(p.player_id for p in team)) for team in combo2.teams]
+        
+        # Sort team sets for comparison
+        combo1_teams.sort()
+        combo2_teams.sort()
+        
+        return combo1_teams == combo2_teams
+
+    def _analyze_player_pool(self, players: List[Player]) -> Dict[str, Any]:
+        """Analyze player pool to determine optimal combination generation strategy
+        
+        Returns a dictionary with:
+        - total_players: Number of players
+        - num_teams: Number of teams to form
+        - team_size: Size of each team
+        - theoretical_max_combinations: Estimated maximum possible combinations
+        - difficulty_score: Score indicating how difficult it will be to find diverse combinations (0-1)
+        - recommended_pool_size: Recommended number of combinations to generate
+        - recommended_sample_size: Recommended sample size for random generation
+        """
+        num_teams = self.config.num_teams
+        team_size = self.config.team_size
+        total_players = len(players)
+        total_players_needed = num_teams * team_size
+        
+        # Calculate theoretical maximum combinations
+        theoretical_max = self._estimate_num_combinations(total_players, num_teams, team_size)
+        
+        # Analyze diversity difficulty
+        # Factors:
+        # 1. Player pool size relative to needed (larger pool = easier diversity)
+        # 2. Number of players that can be different between combinations
+        # 3. Constraint density (more constraints = harder to find diverse combinations)
+        
+        # Calculate how many players can vary between combinations
+        players_per_combination = num_teams * team_size
+        players_that_can_differ = total_players - players_per_combination
+        
+        # Difficulty score: 0 = easy (many diverse options), 1 = hard (few diverse options)
+        # If players_that_can_differ is negative or very small, it's very hard
+        if players_that_can_differ <= 0:
+            difficulty_score = 1.0
+        else:
+            # Difficulty increases as the ratio of fixed players increases
+            # If we need all players, difficulty is 1.0
+            # If we can choose from many extras, difficulty decreases
+            fixed_ratio = players_per_combination / total_players
+            # Also consider that with only 3 allowed repeats, we need significant variation
+            # A combination uses 'players_per_combination' players
+            # For 3 diverse combinations with max 3 repeats, we need at least:
+            # players_per_combination * 3 - (3 * 2) = players_per_combination * 3 - 6 unique player assignments
+            min_unique_assignments = (players_per_combination * 3) - 6
+            if total_players < min_unique_assignments:
+                difficulty_score = min(1.0, 1.0 - (total_players / min_unique_assignments))
+            else:
+                # Difficulty based on fixed ratio and available variation
+                difficulty_score = max(0.0, min(1.0, fixed_ratio * 1.5 - 0.3))
+        
+        # Calculate recommended pool size based on difficulty and theoretical max
+        # For easy cases: smaller pool is fine
+        # For hard cases: need much larger pool to find 3 diverse combinations
+        base_pool_multiplier = 50  # Base multiplier for finding diverse combinations
+        difficulty_multiplier = 1 + (difficulty_score * 9)  # 1x to 10x based on difficulty
+        recommended_pool_size = int(base_pool_multiplier * difficulty_multiplier * 3)  # At least 3 combinations needed
+        
+        # Cap at reasonable maximum
+        max_reasonable_pool = min(theoretical_max, 50000)
+        recommended_pool_size = min(recommended_pool_size, max_reasonable_pool)
+        
+        # For sampling: if theoretical max is huge, sample more to ensure diversity
+        if theoretical_max > 10000:
+            # Sample a percentage based on difficulty
+            sample_percentage = max(0.05, min(0.20, 0.10 * (1 + difficulty_score)))
+            recommended_sample_size = int(theoretical_max * sample_percentage)
+            recommended_sample_size = min(recommended_sample_size, 50000)
+        else:
+            # Use all combinations if feasible
+            recommended_sample_size = theoretical_max
+        
+        return {
+            "total_players": total_players,
+            "num_teams": num_teams,
+            "team_size": team_size,
+            "players_per_combination": players_per_combination,
+            "theoretical_max_combinations": theoretical_max,
+            "difficulty_score": difficulty_score,
+            "recommended_pool_size": recommended_pool_size,
+            "recommended_sample_size": recommended_sample_size
+        }
 
     def generate_balanced_teams(self, player_ids: List[int]) -> List[TeamCombination]:
         """Generate balanced teams from player IDs"""
@@ -418,10 +546,29 @@ class TeamBalancer:
         
         logger.info(f"Generating balanced teams for {len(players)} players across {self.config.num_teams} teams")
         
+        # Analyze player pool BEFORE generating combinations to set optimal targets
+        pool_analysis = self._analyze_player_pool(players)
+        logger.info(f"Player pool analysis:")
+        logger.info(f"  Total players: {pool_analysis['total_players']}")
+        logger.info(f"  Theoretical max combinations: {pool_analysis['theoretical_max_combinations']}")
+        logger.info(f"  Difficulty score: {pool_analysis['difficulty_score']:.2f} (0=easy, 1=hard)")
+        logger.info(f"  Recommended pool size: {pool_analysis['recommended_pool_size']}")
+        logger.info(f"  Recommended sample size: {pool_analysis['recommended_sample_size']}")
+        
         valid_combinations = []
         
-        # Generate all possible team combinations
-        team_combinations = self._generate_team_combinations(players)
+        # Generate team combinations based on analysis
+        # If theoretical max is large, use recommended sample size
+        if pool_analysis['theoretical_max_combinations'] > 50000:
+            logger.info(f"Large combination space, using random sampling with {pool_analysis['recommended_sample_size']} samples")
+            team_combinations = self._generate_random_team_combinations(
+                players, self.config.num_teams, self.config.team_size,
+                n_samples=pool_analysis['recommended_sample_size']
+            )
+        else:
+            # Generate all combinations
+            team_combinations = self._generate_team_combinations(players)
+        
         logger.info(f"Generated {len(team_combinations)} possible team combinations")
         
         for teams in team_combinations:
@@ -439,26 +586,205 @@ class TeamBalancer:
         # Sort by balance score first (best balanced teams first)
         valid_combinations.sort(key=lambda x: x.balance.total_balance_score)
         
-        # Apply diversity filter to get varied combinations
-        diverse_combinations = []
-        min_diversity_score = max(0.1, 1.0 - (self.config.diversity_threshold / 2.0))
-        max_options = self.config.top_n_teams * 3
+        # Apply diversity-first selection strategy to find at least 3 combinations
+        min_required_combinations = max(3, self.config.top_n_teams)
         
-        for combination in valid_combinations:
-            if not diverse_combinations:
-                # Always include the best balanced combination
-                diverse_combinations.append(combination)
-            else:
-                diversity_score = self._calculate_team_diversity(combination, diverse_combinations)
-                if diversity_score >= min_diversity_score:
-                    diverse_combinations.append(combination)
-                if len(diverse_combinations) >= max_options:
+        # Use recommended pool size from analysis
+        target_pool_size = pool_analysis['recommended_pool_size']
+        if len(valid_combinations) < target_pool_size:
+            logger.info(f"Only {len(valid_combinations)} valid combinations found, generating more combinations (target: {target_pool_size})...")
+            # Generate additional random combinations based on analysis
+            n_samples_needed = target_pool_size - len(valid_combinations)
+            # Use analysis to determine how many to sample (account for duplicates/invalid)
+            sample_multiplier = 2 if pool_analysis['difficulty_score'] < 0.5 else 3
+            max_samples = min(pool_analysis['recommended_sample_size'], 50000)
+            additional_combinations = self._generate_random_team_combinations(
+                players, self.config.num_teams, self.config.team_size, 
+                n_samples=min(n_samples_needed * sample_multiplier, max_samples)
+            )
+            
+            # Validate and add additional combinations
+            added_count = 0
+            for teams in additional_combinations:
+                if len(valid_combinations) >= target_pool_size:
                     break
+                if self._check_constraints(teams):
+                    balance = self._calculate_team_balance(teams)
+                    combination = TeamCombination(teams=teams, balance=balance)
+                    # Avoid duplicates by checking if combination already exists
+                    if not any(self._combinations_equal(combination, vc) for vc in valid_combinations):
+                        valid_combinations.append(combination)
+                        added_count += 1
+            
+            # Re-sort with new combinations
+            valid_combinations.sort(key=lambda x: x.balance.total_balance_score)
+            logger.info(f"Added {added_count} new combinations, now have {len(valid_combinations)} total valid combinations")
         
-        logger.info(f"Found {len(diverse_combinations)} diverse combinations")
+        # Use greedy diversity-first selection
+        diverse_combinations = []
+        # Adjust threshold based on difficulty - harder cases need more lenient threshold
+        base_threshold = 1.0 - (self.config.diversity_threshold / 2.0)
+        difficulty_adjusted_threshold = base_threshold * (1 - pool_analysis['difficulty_score'] * 0.5)
+        min_diversity_score = max(0.05, difficulty_adjusted_threshold)
         
-        # Return top N diverse combinations (already sorted by balance)
-        return diverse_combinations[:self.config.top_n_teams]
+        logger.info(f"Using diversity threshold: {min_diversity_score:.3f} (adjusted for difficulty: {pool_analysis['difficulty_score']:.2f})")
+        
+        # First pass: Always include the best balanced combination
+        if valid_combinations:
+            diverse_combinations.append(valid_combinations[0])
+        
+        # Second pass: Greedily select combinations that maximize diversity
+        # Adjust candidate pool size based on difficulty
+        base_candidate_multiplier = 50
+        difficulty_candidate_multiplier = base_candidate_multiplier * (1 + pool_analysis['difficulty_score'] * 4)
+        candidate_pool_size = min(len(valid_combinations), int(min_required_combinations * difficulty_candidate_multiplier))
+        candidates = valid_combinations[:candidate_pool_size]  # Top balanced candidates
+        
+        logger.info(f"Evaluating {candidate_pool_size} candidates for diversity...")
+        
+        rejected_count = 0
+        rejected_too_many_repeats = 0
+        rejected_low_diversity = 0
+        
+        for combination in candidates:
+            if len(diverse_combinations) >= min_required_combinations:
+                break
+            
+            # Skip if already selected
+            if any(self._combinations_equal(combination, dc) for dc in diverse_combinations):
+                continue
+            
+            diversity_score = self._calculate_team_diversity(combination, diverse_combinations, enforce_3_player_limit=True)
+            
+            # Accept if it meets diversity requirement (max 3 repeating players, diversity_score >= threshold)
+            # Reject if diversity_score == -1.0 (more than 3 repeating players)
+            if diversity_score == -1.0:
+                # More than 3 repeating players, skip
+                rejected_count += 1
+                rejected_too_many_repeats += 1
+                continue
+            elif diversity_score < min_diversity_score:
+                rejected_count += 1
+                rejected_low_diversity += 1
+                continue
+            else:
+                diverse_combinations.append(combination)
+                logger.debug(f"Added combination {len(diverse_combinations)} with diversity score {diversity_score:.3f}")
+        
+        logger.info(f"Found {len(diverse_combinations)} diverse combinations after greedy selection (from {len(candidates)} candidates)")
+        logger.info(f"Rejected {rejected_count} combinations: {rejected_too_many_repeats} with >3 repeats, {rejected_low_diversity} with low diversity score")
+        
+        # If still not enough, expand candidate pool significantly
+        if len(diverse_combinations) < min_required_combinations:
+            logger.info(f"Expanding search to find more diverse combinations...")
+            # Try with much larger candidate pool
+            larger_pool = min(len(valid_combinations), int(min_required_combinations * 200 * (1 + pool_analysis['difficulty_score'])))
+            candidates = valid_combinations[:larger_pool]
+            
+            expanded_rejected_count = 0
+            expanded_rejected_too_many_repeats = 0
+            expanded_rejected_low_diversity = 0
+            
+            for combination in candidates:
+                if len(diverse_combinations) >= min_required_combinations:
+                    break
+                
+                # Skip if already selected
+                if any(self._combinations_equal(combination, dc) for dc in diverse_combinations):
+                    continue
+                
+                # Still enforce strict 3-player limit (no relaxed mode)
+                diversity_score = self._calculate_team_diversity(combination, diverse_combinations, enforce_3_player_limit=True)
+                # Accept if meets threshold
+                if diversity_score == -1.0:
+                    expanded_rejected_count += 1
+                    expanded_rejected_too_many_repeats += 1
+                    continue
+                elif diversity_score < min_diversity_score:
+                    expanded_rejected_count += 1
+                    expanded_rejected_low_diversity += 1
+                    continue
+                else:
+                    diverse_combinations.append(combination)
+                    logger.debug(f"Added combination {len(diverse_combinations)} with diversity score {diversity_score:.3f}")
+            
+            logger.info(f"Expanded search: Rejected {expanded_rejected_count} combinations: {expanded_rejected_too_many_repeats} with >3 repeats, {expanded_rejected_low_diversity} with low diversity")
+        
+        logger.info(f"Final count: {len(diverse_combinations)} diverse combinations (checked up to {len(candidates)} candidates)")
+        
+        # If we still only have 1 combination, there might be a fundamental issue
+        # Check if the problem is that all combinations use the same players
+        if len(diverse_combinations) == 1 and len(valid_combinations) > 1:
+            # Debug: Check what players are in the first combination vs others
+            first_combo_players = set()
+            for team in diverse_combinations[0].teams:
+                first_combo_players.update(p.player_id for p in team)
+            
+            logger.warning(f"Only found 1 diverse combination. First combination uses {len(first_combo_players)} players: {sorted(first_combo_players)}")
+            logger.warning(f"Total players available: {pool_analysis['total_players']}, Players per combination: {pool_analysis['players_per_combination']}")
+            
+            # Check if all combinations must use the same players (no leftover players)
+            if pool_analysis['total_players'] == pool_analysis['players_per_combination']:
+                logger.warning(f"⚠️ PROBLEM DETECTED: All combinations must use the same {pool_analysis['total_players']} players (no leftovers)")
+                logger.warning(f"This means every combination shares all {pool_analysis['total_players']} players, violating the 3-player limit")
+                logger.warning(f"Solution: We need to compare team-by-team overlap instead of overall player overlap")
+                
+                # Try team-by-team comparison as alternative
+                logger.info("Attempting team-by-team diversity comparison instead...")
+                for combo in valid_combinations[1:min(len(valid_combinations), 100)]:
+                    if len(diverse_combinations) >= min_required_combinations:
+                        break
+                    
+                    if any(self._combinations_equal(combo, dc) for dc in diverse_combinations):
+                        continue
+                    
+                    # Use the same team-by-team comparison logic as _calculate_team_diversity
+                    # Check if any team in new combo shares more than 3 players with any team in existing combos
+                    max_team_overlap = 0
+                    
+                    new_team_sets = [set(p.player_id for p in team) for team in combo.teams]
+                    
+                    for existing_combo in diverse_combinations:
+                        existing_team_sets = [set(p.player_id for p in team) for team in existing_combo.teams]
+                        
+                        # Check each team in new combo against each team in existing combo
+                        for new_team in new_team_sets:
+                            for existing_team in existing_team_sets:
+                                overlap = len(new_team & existing_team)
+                                max_team_overlap = max(max_team_overlap, overlap)
+                    
+                    # Accept if no individual team pair has more than 3 overlapping players
+                    # This is the same logic as _calculate_team_diversity, so results should match
+                    if max_team_overlap <= 3:
+                        diverse_combinations.append(combo)
+                        logger.info(f"Added combination {len(diverse_combinations)} using team-by-team comparison (max team overlap: {max_team_overlap})")
+                    else:
+                        logger.debug(f"Rejected combination: max team overlap {max_team_overlap} exceeds 3")
+                
+                logger.info(f"After team-by-team comparison: {len(diverse_combinations)} combinations found")
+            else:
+                # Check a few other combinations for debugging
+                for i, combo in enumerate(valid_combinations[1:min(6, len(valid_combinations))], 1):
+                    other_combo_players = set()
+                    for team in combo.teams:
+                        other_combo_players.update(p.player_id for p in team)
+                    repeating = first_combo_players & other_combo_players
+                    logger.warning(f"Combination {i+1} uses {len(other_combo_players)} players: {sorted(other_combo_players)}, repeats: {len(repeating)} players: {sorted(repeating)}")
+                    
+                    if len(repeating) > 3:
+                        logger.warning(f"  -> This is why it was rejected: {len(repeating)} repeating players exceeds limit of 3")
+        
+        # Ensure we return at least 3, or as many as available
+        result_count = min(min_required_combinations, len(diverse_combinations))
+        if len(diverse_combinations) < 3:
+            # Last resort: return what we have (may have more than 3 repeating players)
+            result_count = len(diverse_combinations)
+            if result_count == 0 and valid_combinations:
+                # Absolute fallback: return top 3 balanced
+                logger.warning("Could not find diverse combinations, returning top balanced ones")
+                return valid_combinations[:min(3, len(valid_combinations))]
+        
+        return diverse_combinations[:result_count]
 
 class TeamBalancerDisplay:
     """Handles team display formatting"""

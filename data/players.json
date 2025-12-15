@@ -649,5 +649,41 @@
       "stamina": 2.3,
       "speed": 2.4
     }
+  },
+  {
+    "Id": 43,
+    "Name": "Curro (Gabo)",
+    "Position": [
+      "DF"
+    ],
+    "Stats": {
+      "level": 3.0,
+      "stamina": 2.3,
+      "speed": 2.4
+    }
+  },
+  {
+    "Id": 44,
+    "Name": "Miguel (Isra)",
+    "Position": [
+      "MF"
+    ],
+    "Stats": {
+      "level": 3.0,
+      "stamina": 3.0,
+      "speed": 3.0
+    }
+  },
+  {
+    "Id": 45,
+    "Name": "Fer, sabado",
+    "Position": [
+      "MF"
+    ],
+    "Stats": {
+      "level": 4.3,
+      "stamina": 3.5,
+      "speed": 3.0
+    }
   }
 ]
