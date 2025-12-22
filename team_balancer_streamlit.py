@@ -13,6 +13,9 @@ import json
 import os
 from datetime import datetime
 import numpy as np # Added for standard deviation calculation
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Import existing modules
 from team_balancer import TeamBalancer, PlayerRegistry, Player, PlayerStats, Position, TeamBalancerConfig
@@ -25,28 +28,33 @@ class StreamlitTeamBalancerUI:
     
     def __init__(self):
         """Initialize the Streamlit UI"""
-        # Load configuration
-        self.config = AppConfig.load()
-        
-        # Initialize components
-        self.data_manager = DataManager(self.config)
-        self.player_registry = PlayerRegistry()
-        
-        # Create TeamBalancerConfig from AppConfig
-        team_config = TeamBalancerConfig(
-            team_size=self.config.team_size,
-            top_n_teams=self.config.top_n_teams,
-            diversity_threshold=self.config.diversity_threshold,
-            must_be_on_same_teams=self.config.must_be_on_same_teams,
-            stat_weights=self.config.stat_weights
-        )
-        
-        self.team_balancer = TeamBalancer(team_config, self.player_registry)
-        
-        # Load existing players
-        self._load_players()
-        
-        self._initialize_session_state()
+        try:
+            # Load configuration
+            self.config = AppConfig.load()
+            
+            # Initialize components
+            self.data_manager = DataManager(self.config)
+            self.player_registry = PlayerRegistry()
+            
+            # Create TeamBalancerConfig from AppConfig
+            team_config = TeamBalancerConfig(
+                team_size=self.config.team_size,
+                top_n_teams=self.config.top_n_teams,
+                diversity_threshold=self.config.diversity_threshold,
+                must_be_on_same_teams=self.config.must_be_on_same_teams,
+                stat_weights=self.config.stat_weights
+            )
+            
+            self.team_balancer = TeamBalancer(team_config, self.player_registry)
+            
+            # Load existing players
+            self._load_players()
+            
+            self._initialize_session_state()
+        except Exception as e:
+            logger.exception("Error during StreamlitTeamBalancerUI initialization")
+            # Don't raise here - let Streamlit handle it in the UI
+            raise
     
     def _initialize_session_state(self):
         """Initialize session state variables"""
@@ -87,8 +95,14 @@ class StreamlitTeamBalancerUI:
         try:
             players = self.data_manager.load_players()
             for player in players:
-                self.player_registry.add_player(player)
+                try:
+                    self.player_registry.add_player(player)
+                except ValueError as ve:
+                    # Player already exists, skip it (this can happen if _load_players is called multiple times)
+                    logger.warning(f"Player '{player.name}' already exists, skipping: {ve}")
+                    continue
         except Exception as e:
+            logger.error(f"Error loading players: {e}")
             st.error(f"Error loading players: {e}")
     
     def run(self):
@@ -268,293 +282,38 @@ class StreamlitTeamBalancerUI:
         """Show the players management page"""
         st.markdown('<h1 class="sub-header">👥 Player Management</h1>', unsafe_allow_html=True)
         
-        # CRUD operations
-        col1, col2, col3 = st.columns([1, 1, 1])
-        
-        with col1:
-            if st.button("➕ Add Player", use_container_width=True, key="add_player"):
-                self._show_add_player_form()
-        
-        with col2:
-            if st.button("🔄 Refresh", use_container_width=True, key="refresh_players"):
-                self._load_players()
-                st.success("Players refreshed successfully!")
-                st.rerun()
-        
-        with col3:
-            if st.button("📊 View Stats", use_container_width=True, key="view_stats"):
-                self._show_player_stats()
-        
-        # Player list
-        players = self.player_registry.get_all_players()
-        
-        if players:
-            df = self._players_to_dataframe(players, include_total=True)
-            
-            # Display with selection
-            st.markdown("### 📋 Player List")
-            selected_indices = st.dataframe(
-                df,
-                use_container_width=True,
-                hide_index=True,
-                column_config={
-                    "ID": st.column_config.NumberColumn("ID", width="small"),
-                    "Name": st.column_config.TextColumn("Name", width="medium"),
-                    "Positions": st.column_config.TextColumn("Positions", width="medium"),
-                    "Level": st.column_config.NumberColumn("Level", format="%.1f", width="small"),
-                    "Stamina": st.column_config.NumberColumn("Stamina", format="%.1f", width="small"),
-                    "Speed": st.column_config.NumberColumn("Speed", format="%.1f", width="small"),
-                    "Total Stats": st.column_config.NumberColumn("Total", format="%.1f", width="small")
-                }
-            )
-            
-            # Player actions
-            st.markdown("### 🛠️ Player Actions")
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                # Edit player
-                player_names = [p.name for p in players]
-                if player_names:
-                    selected_player_name = st.selectbox("Select player to edit:", player_names)
-                    
-                    if st.button("✏️ Edit Player", type="primary", key="edit_player"):
-                        selected_player = next(p for p in players if p.name == selected_player_name)
-                        st.session_state.editing_player = selected_player
-                        st.rerun()
-                else:
-                    st.info("No players available to edit.")
-            
-            with col2:
-                # Delete player
-                if player_names:
-                    delete_player_name = st.selectbox("Select player to delete:", player_names)
-                    
-                    if st.button("🗑️ Delete Player", type="secondary", key="delete_player"):
-                        if st.checkbox("Confirm deletion"):
-                            self._delete_player(delete_player_name)
-                            st.success(f"Player '{delete_player_name}' deleted successfully!")
-                            st.rerun()
-                else:
-                    st.info("No players available to delete.")
-            
-            # Show edit form if a player is being edited
-            if hasattr(st.session_state, 'editing_player') and st.session_state.editing_player:
-                st.markdown("---")
-                st.markdown("### ✏️ Editing Player")
-                
-                # Add a cancel button outside the form
-                if st.button("❌ Cancel Edit", type="secondary", key="cancel_edit"):
-                    del st.session_state.editing_player
-                    st.rerun()
-                
-                # Show the edit form
-                self._show_edit_player_form(st.session_state.editing_player)
-        else:
-            st.info("No players found. Add some players to get started!")
-    
-    def _show_add_player_form(self):
-        """Show the add player form"""
-        st.markdown("### ➕ Add New Player")
-        
-        with st.form("add_player_form"):
-            name = st.text_input("Player Name", placeholder="Enter player name")
-            
-            # Positions
-            positions = st.multiselect(
-                "Positions",
-                options=[pos.value for pos in Position],
-                default=[]
-            )
-            
-            # Stats
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                level = st.slider("Level", 1.0, 5.0, 3.0, 0.1)
-            with col2:
-                stamina = st.slider("Stamina", 1.0, 5.0, 3.0, 0.1)
-            with col3:
-                speed = st.slider("Speed", 1.0, 5.0, 3.0, 0.1)
-            
-            submitted = st.form_submit_button("Add Player")
-            
-            if submitted:
-                if name and positions:
-                    try:
-                        # Create player
-                        player = Player(
-                            name=name,
-                            positions=[Position(pos) for pos in positions],
-                            stats=PlayerStats(level=level, stamina=stamina, speed=speed)
-                        )
-                        
-                        # Add to registry
-                        self.player_registry.add_player(player)
-                        
-                        # Save to file
-                        players = self.player_registry.get_all_players()
-                        self.data_manager.save_players(players)
-                        
-                        st.success(f"Player '{name}' added successfully!")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Error adding player: {e}")
-                else:
-                    st.error("Please fill in all required fields.")
-    
-    def _show_edit_player_form(self, player: Player):
-        """Show the edit player form"""
-        st.markdown(f"### ✏️ Edit Player: {player.name}")
-        
-        # Store original values for comparison
-        original_name = player.name
-        original_positions = [pos.value for pos in player.positions]
-        original_level = player.stats.level
-        original_stamina = player.stats.stamina
-        original_speed = player.stats.speed
-        
-        with st.form("edit_player_form"):
-            name = st.text_input("Player Name", value=original_name)
-            
-            # Positions
-            positions = st.multiselect(
-                "Positions",
-                options=[pos.value for pos in Position],
-                default=original_positions
-            )
-            
-            # Stats
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                level = st.slider("Level", 1.0, 5.0, original_level, 0.1)
-            with col2:
-                stamina = st.slider("Stamina", 1.0, 5.0, original_stamina, 0.1)
-            with col3:
-                speed = st.slider("Speed", 1.0, 5.0, original_speed, 0.1)
-            
-            submitted = st.form_submit_button("Update Player")
-            
-            if submitted:
-                if name and positions:
-                    try:
-                        # Create new PlayerStats object
-                        new_stats = PlayerStats(level=level, stamina=stamina, speed=speed)
-                        
-                        # Create updated player object
-                        updated_player = Player(
-                            name=name,
-                            positions=[Position(pos) for pos in positions],
-                            stats=new_stats,
-                            player_id=player.player_id
-                        )
-                        
-                        # Update player in registry
-                        success = self.player_registry.update_player(player.player_id, updated_player)
-                        if not success:
-                            raise ValueError(f"Failed to update player with ID {player.player_id}")
-                        
-                        # Save to file
-                        players = self.player_registry.get_all_players()
-                        self.data_manager.save_players(players)
-                        
-                        # Show updated information
-                        st.info(f"""
-                        **Updated Player Information:**
-                        - **Name**: {name}
-                        - **Positions**: {', '.join(positions)}
-                        - **Level**: {level:.1f}
-                        - **Stamina**: {stamina:.1f}
-                        - **Speed**: {speed:.1f}
-                        - **Total Stats**: {level + stamina + speed:.1f}
-                        """)
-                        
-                        # Clear the editing state to go back to players list
-                        if 'editing_player' in st.session_state:
-                            del st.session_state.editing_player
-                        
-                        # Force refresh of players list
-                        st.success(f"Player '{name}' updated successfully!")
-                        st.rerun()
-                        
-                    except Exception as e:
-                        st.error(f"Error updating player: {e}")
-                        st.error(f"Details: {str(e)}")
-                else:
-                    st.error("Please fill in all required fields.")
-                    if not name:
-                        st.error("Player name is required.")
-                    if not positions:
-                        st.error("At least one position is required.")
-    
-    def _delete_player(self, player_name: str):
-        """Delete a player"""
         try:
-            # Find and remove player
+            # Ensure players are loaded
+            if not self.player_registry.get_all_players():
+                self._load_players()
+            
+            # Player list
             players = self.player_registry.get_all_players()
-            player_to_delete = next(p for p in players if p.name == player_name)
             
-            # Remove from registry
-            self.player_registry.remove_player(player_to_delete.player_id)
-            
-            # Save to file
-            players = self.player_registry.get_all_players()
-            self.data_manager.save_players(players)
-            
-            st.success(f"Player '{player_name}' deleted successfully!")
+            if players:
+                df = self._players_to_dataframe(players, include_total=True)
+                
+                # Display with selection
+                st.markdown("### 📋 Player List")
+                selected_indices = st.dataframe(
+                    df,
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "ID": st.column_config.NumberColumn("ID", width="small"),
+                        "Name": st.column_config.TextColumn("Name", width="medium"),
+                        "Positions": st.column_config.TextColumn("Positions", width="medium"),
+                        "Level": st.column_config.NumberColumn("Level", format="%.1f", width="small"),
+                        "Stamina": st.column_config.NumberColumn("Stamina", format="%.1f", width="small"),
+                        "Speed": st.column_config.NumberColumn("Speed", format="%.1f", width="small"),
+                        "Total Stats": st.column_config.NumberColumn("Total", format="%.1f", width="small")
+                    }
+                )
+            else:
+                st.info("No players found.")
         except Exception as e:
-            st.error(f"Error deleting player: {e}")
-    
-    def _show_player_stats(self):
-        """Show player statistics"""
-        players = self.player_registry.get_all_players()
-        
-        if not players:
-            st.info("No players to display statistics for.")
-            return
-        
-        # Convert to DataFrame
-        stats_data = []
-        for player in players:
-            stats_data.append({
-                'Name': player.name,
-                'Level': player.stats.level,
-                'Stamina': player.stats.stamina,
-                'Speed': player.stats.speed,
-                'Total': player.stats.level + player.stats.stamina + player.stats.speed
-            })
-        
-        df = pd.DataFrame(stats_data)
-        
-        # Statistics
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("### 📊 Player Statistics")
-            st.dataframe(df.describe(), use_container_width=True)
-        
-        with col2:
-            st.markdown("### 🏆 Top Players")
-            top_players = df.nlargest(5, 'Total')
-            st.dataframe(top_players, use_container_width=True)
-        
-        # Charts
-        st.markdown("### 📈 Visualizations")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            # Stats distribution
-            fig = px.histogram(df, x=['Level', 'Stamina', 'Speed'], 
-                             title="Stats Distribution",
-                             barmode='overlay')
-            st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            # Scatter plot
-            fig = px.scatter(df, x='Level', y='Stamina', 
-                           size='Speed', hover_data=['Name'],
-                           title="Level vs Stamina (Size = Speed)")
-            st.plotly_chart(fig, use_container_width=True)
+            st.error(f"Error displaying players: {e}")
+            logger.exception("Error in _show_players_page")
     
     def _show_create_teams_page(self):
         """Show the team creation page"""
@@ -1603,8 +1362,13 @@ class StreamlitTeamBalancerUI:
 
 def main():
     """Main function to run the Streamlit app"""
-    app = StreamlitTeamBalancerUI()
-    app.run()
+    try:
+        app = StreamlitTeamBalancerUI()
+        app.run()
+    except Exception as e:
+        st.error(f"Error initializing application: {e}")
+        logger.exception("Error in main function")
+        st.exception(e)
 
 
 if __name__ == "__main__":
