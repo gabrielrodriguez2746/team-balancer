@@ -4,93 +4,66 @@
     "Name": "Gabo",
     "Position": [
       "DF",
-      "FW",
-      "MF"
+      "MF",
+      "GK",
+      "FW"
     ],
     "Stats": {
-      "level": 4.2,
-      "stamina": 5.0,
-      "speed": 4.1
+      "level": 4.0,
+      "stamina": 4.6,
+      "speed": 4.4
     }
   },
   {
     "Id": 2,
     "Name": "Armen",
     "Position": [
-      "DF",
-      "MF"
+      "DF"
     ],
     "Stats": {
-      "level": 3.1,
-      "stamina": 2.7,
-      "speed": 2.4
-    }
-  },
-  {
-    "Id": 3,
-    "Name": "Victor Victor Victor",
-    "Position": [
-      "DF",
-      "MF"
-    ],
-    "Stats": {
-      "level": 3.4,
-      "stamina": 3.3,
-      "speed": 3.1
-    }
-  },
-  {
-    "Id": 4,
-    "Name": "Davide",
-    "Position": [
-      "DF",
-      "FW",
-      "MF"
-    ],
-    "Stats": {
-      "level": 4.0,
-      "stamina": 3.5,
-      "speed": 4.4
+      "level": 3.33,
+      "stamina": 3.0,
+      "speed": 2.33
     }
   },
   {
     "Id": 5,
-    "Name": "Juan Salamone",
+    "Name": "Fran",
     "Position": [
-      "DF",
-      "MF"
+      "DF"
     ],
     "Stats": {
-      "level": 3.4,
-      "stamina": 3.5,
-      "speed": 3.1
+      "level": 3.0,
+      "stamina": 2.2,
+      "speed": 1.8
     }
   },
   {
     "Id": 6,
     "Name": "Pablo",
     "Position": [
-      "DF",
       "FW",
+      "DF",
       "MF"
     ],
     "Stats": {
-      "level": 4.1,
-      "stamina": 3.9,
-      "speed": 3.7
+      "level": 4.5,
+      "stamina": 4.25,
+      "speed": 3.75
     }
   },
   {
     "Id": 7,
-    "Name": "Edu Ochoa",
+    "Name": "Edu",
     "Position": [
+      "FW",
       "DF",
       "MF"
     ],
     "Stats": {
-      "level": 2.8,
+      "level": 3.33,
       "stamina": 3.0,
-      "speed": 2.8
+      "speed": 3.0
     }
   },
   {
@@ -148,27 +121,16 @@
     }
   },
   {
-    "Id": 12,
-    "Name": "Fran",
-    "Position": [
-      "DF"
-    ],
-    "Stats": {
-      "level": 3.0,
-      "stamina": 2.2,
-      "speed": 1.8
-    }
-  },
-  {
     "Id": 13,
-    "Name": "Nico Laderach",
+    "Name": "Nico Atico",
     "Position": [
+      "FW",
       "DF"
     ],
     "Stats": {
-      "level": 3.5,
-      "stamina": 2.8,
-      "speed": 3.2
+      "level": 3.94,
+      "stamina": 3.56,
+      "speed": 3.31
     }
   },
   {
@@ -202,14 +164,14 @@
     "Id": 16,
     "Name": "Rick (Halcon)",
     "Position": [
-      "MF",
+      "FW",
       "DF",
-      "FW"
+      "MF"
     ],
     "Stats": {
-      "level": 2.5,
-      "stamina": 2.5,
-      "speed": 3.0
+      "level": 3.38,
+      "stamina": 2.94,
+      "speed": 3.22
     }
   },
   {
@@ -274,9 +236,9 @@
       "DF"
     ],
     "Stats": {
-      "level": 2.8,
-      "stamina": 2.4,
-      "speed": 1.8
+      "level": 2.98,
+      "stamina": 2.34,
+      "speed": 2.27
     }
   },
   {
@@ -284,13 +246,14 @@
     "Name": "Roger",
     "Position": [
       "GK",
+      "FW",
       "DF",
       "MF"
     ],
     "Stats": {
-      "level": 3.3,
-      "stamina": 3.0,
-      "speed": 3.0
+      "level": 3.92,
+      "stamina": 3.66,
+      "speed": 3.44
     }
   },
   {
@@ -320,33 +283,34 @@
   },
   {
     "Id": 25,
-    "Name": "Emmanuel",
+    "Name": "Enmanuel",
     "Position": [
-      "MF",
-      "FW"
+      "FW",
+      "MF"
     ],
     "Stats": {
-      "level": 1.5,
-      "stamina": 2.0,
-      "speed": 2.8
+      "level": 2.38,
+      "stamina": 2.44,
+      "speed": 3.19
     }
   },
   {
     "Id": 26,
-    "Name": "Jose Luis (hermano Gabo)",
+    "Name": "Jose (Hermano Gabo)",
     "Position": [
+      "GK",
       "DF",
       "MF"
     ],
     "Stats": {
-      "level": 3.0,
-      "stamina": 2.5,
-      "speed": 2.5
+      "level": 3.12,
+      "stamina": 2.69,
+      "speed": 2.44
     }
   },
   {
     "Id": 27,
-    "Name": "Jose Luis (papa Gabo)",
+    "Name": "Jose (padre Gabo)",
     "Position": [
       "GK",
       "DF"
@@ -403,25 +367,27 @@
     "Name": "Brian",
     "Position": [
       "FW",
+      "DF",
       "MF"
     ],
     "Stats": {
-      "level": 3.3,
-      "stamina": 2.9,
-      "speed": 3.2
+      "level": 3.92,
+      "stamina": 3.28,
+      "speed": 3.61
     }
   },
   {
     "Id": 32,
-    "Name": "Felipe",
+    "Name": "Felipe (Dr Ramos)",
     "Position": [
-      "MF",
-      "DF"
+      "FW",
+      "DF",
+      "MF"
     ],
     "Stats": {
       "level": 3.0,
-      "stamina": 2.0,
-      "speed": 2.0
+      "stamina": 2.44,
+      "speed": 2.44
     }
   },
   {
@@ -441,18 +407,18 @@
     "Name": "Marc (portero)",
     "Position": [
       "GK",
-      "DF",
-      "FW"
+      "FW",
+      "DF"
     ],
     "Stats": {
       "level": 3.0,
-      "stamina": 3.6,
-      "speed": 3.0
+      "stamina": 2.2,
+      "speed": 2.12
     }
   },
   {
     "Id": 35,
-    "Name": "Frano fino \ud83c\udde6\ud83c\uddf7",
+    "Name": "Frano fino 🇦🇷",
     "Position": [
       "MF",
       "DF"
@@ -465,7 +431,7 @@
   },
   {
     "Id": 36,
-    "Name": "Maxi H (Frano fino \ud83c\udde6\ud83c\uddf7)",
+    "Name": "Maxi H (Frano fino 🇦🇷)",
     "Position": [
       "MF",
       "DF"
@@ -478,14 +444,16 @@
   },
   {
     "Id": 37,
-    "Name": "Christian (Gabo)",
+    "Name": "Christian (amigo Gabo)",
     "Position": [
+      "FW",
+      "DF",
       "MF"
     ],
     "Stats": {
       "level": 4.0,
       "stamina": 4.0,
-      "speed": 4.0
+      "speed": 3.71
     }
   },
   {
@@ -516,15 +484,16 @@
   },
   {
     "Id": 40,
-    "Name": "Christian Gonzalez (Brian)",
+    "Name": "Christian Rivera (amigo Brian)",
     "Position": [
       "FW",
+      "DF",
       "MF"
     ],
     "Stats": {
-      "level": 3.7,
-      "stamina": 3.0,
-      "speed": 3.7
+      "level": 3.38,
+      "stamina": 3.29,
+      "speed": 3.67
     }
   },
   {
@@ -589,14 +558,111 @@
   },
   {
     "Id": 46,
-    "Name": "Richard (Gabo)",
+    "Name": "Richard",
     "Position": [
-      "DF"
+      "FW",
+      "DF",
+      "MF"
     ],
     "Stats": {
-      "level": 3.0,
-      "stamina": 2.3,
-      "speed": 2.5
+      "level": 2.78,
+      "stamina": 2.25,
+      "speed": 2.72
+    }
+  },
+  {
+    "Id": 47,
+    "Name": "Damian",
+    "Position": [
+      "DF",
+      "MF",
+      "GK",
+      "FW"
+    ],
+    "Stats": {
+      "level": 4.5,
+      "stamina": 4.0,
+      "speed": 4.0
+    }
+  },
+  {
+    "Id": 48,
+    "Name": "Mauricio",
+    "Position": [
+      "DF",
+      "MF"
+    ],
+    "Stats": {
+      "level": 3.5,
+      "stamina": 3.5,
+      "speed": 3.5
+    }
+  },
+  {
+    "Id": 49,
+    "Name": "Jordan",
+    "Position": [
+      "FW",
+      "DF",
+      "MF"
+    ],
+    "Stats": {
+      "level": 1.67,
+      "stamina": 2.0,
+      "speed": 2.0
+    }
+  },
+  {
+    "Id": 50,
+    "Name": "Samuel",
+    "Position": [
+      "FW",
+      "MF"
+    ],
+    "Stats": {
+      "level": 3.67,
+      "stamina": 3.0,
+      "speed": 3.0
+    }
+  },
+  {
+    "Id": 51,
+    "Name": "Sergio P.",
+    "Position": [
+      "FW",
+      "DF",
+      "MF"
+    ],
+    "Stats": {
+      "level": 3.5,
+      "stamina": 3.0,
+      "speed": 3.0
+    }
+  },
+  {
+    "Id": 52,
+    "Name": "Alexsandro 🇧🇷",
+    "Position": [
+      "FW",
+      "DF",
+      "MF"
+    ],
+    "Stats": {
+      "level": 3.67,
+      "stamina": 2.67,
+      "speed": 3.33
+    }
+  },
+  {
+    "Id": 53,
+    "Name": "Victor",
+    "Position": [
+      "FW"
+    ],
+    "Stats": {
+      "level": 2.67,
+      "stamina": 2.67,
+      "speed": 2.67
     }
   }
 ]
