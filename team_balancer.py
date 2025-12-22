@@ -27,12 +27,6 @@ class Position(Enum):
     DF = "DF"   # Defender
     MF = "MF"   # Midfielder
     FW = "FW"   # Forward
-    LW = "LW"   # Left Winger
-    RW = "RW"   # Right Winger
-    CM = "CM"   # Center Midfielder
-    CB = "CB"   # Center Back
-    LB = "LB"   # Left Back
-    RB = "RB"   # Right Back
 
 @dataclass
 class PlayerStats:

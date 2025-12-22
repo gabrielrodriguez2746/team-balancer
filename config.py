@@ -56,7 +56,14 @@ class AppConfig:
     @classmethod
     def from_dict(cls, data: Dict) -> "AppConfig":
         """Create from dictionary"""
-        return cls(**data)
+        # Filter out fields that no longer exist in the class
+        valid_fields = {
+            'team_size', 'num_teams', 'top_n_teams', 'diversity_threshold',
+            'must_be_on_same_teams', 'stat_weights', 'log_level',
+            'data_dir', 'players_file', 'config_file', 'log_file'
+        }
+        filtered_data = {k: v for k, v in data.items() if k in valid_fields}
+        return cls(**filtered_data)
     
     def save(self) -> None:
         """Save configuration to file"""
@@ -78,7 +85,7 @@ class AppConfig:
 DEFAULT_CONFIG = AppConfig()
 
 # Football positions
-POSITIONS_ALLOWED = ["GK", "DF", "MF", "FW", "LW", "RW", "CM", "CB", "LB", "RB"]
+POSITIONS_ALLOWED = ["GK", "DF", "MF", "FW"]
 
 # Stat validation ranges
 STAT_MIN_VALUE = 1.0

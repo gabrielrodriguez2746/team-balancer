@@ -5,13 +5,7 @@
     "Position": [
       "DF",
       "FW",
-      "MF",
-      "CB",
-      "LB",
-      "CM",
-      "RB",
-      "RW",
-      "LW"
+      "MF"
     ],
     "Stats": {
       "level": 4.2,
@@ -24,11 +18,7 @@
     "Name": "Armen",
     "Position": [
       "DF",
-      "CB",
-      "MF",
-      "LB",
-      "RB",
-      "LW"
+      "MF"
     ],
     "Stats": {
       "level": 3.1,
@@ -41,10 +31,7 @@
     "Name": "Victor Victor Victor",
     "Position": [
       "DF",
-      "MF",
-      "CB",
-      "LB",
-      "RB"
+      "MF"
     ],
     "Stats": {
       "level": 3.4,
@@ -58,12 +45,7 @@
     "Position": [
       "DF",
       "FW",
-      "CB",
-      "MF",
-      "LB",
-      "RB",
-      "RW",
-      "LW"
+      "MF"
     ],
     "Stats": {
       "level": 4.0,
@@ -76,12 +58,7 @@
     "Name": "Juan Salamone",
     "Position": [
       "DF",
-      "MF",
-      "CB",
-      "LB",
-      "RB",
-      "RW",
-      "LW"
+      "MF"
     ],
     "Stats": {
       "level": 3.4,
@@ -95,11 +72,7 @@
     "Position": [
       "DF",
       "FW",
-      "MF",
-      "LB",
-      "RB",
-      "RW",
-      "LW"
+      "MF"
     ],
     "Stats": {
       "level": 4.1,
@@ -112,11 +85,7 @@
     "Name": "Edu Ochoa",
     "Position": [
       "DF",
-      "MF",
-      "CB",
-      "LB",
-      "RB",
-      "LW"
+      "MF"
     ],
     "Stats": {
       "level": 2.8,
@@ -129,7 +98,6 @@
     "Name": "Lucas FC",
     "Position": [
       "FW",
-      "CB",
       "DF",
       "MF"
     ],
@@ -144,9 +112,7 @@
     "Name": "Oscar Miercoles",
     "Position": [
       "MF",
-      "DF",
-      "LB",
-      "RB"
+      "DF"
     ],
     "Stats": {
       "level": 3.6,
@@ -159,10 +125,7 @@
     "Name": "Rodri",
     "Position": [
       "MF",
-      "LB",
-      "RB",
-      "RW",
-      "LW"
+      "DF"
     ],
     "Stats": {
       "level": 3.7,
@@ -176,9 +139,7 @@
     "Position": [
       "DF",
       "MF",
-      "RW",
-      "FW",
-      "LW"
+      "FW"
     ],
     "Stats": {
       "level": 4.8,
@@ -190,10 +151,7 @@
     "Id": 12,
     "Name": "Fran",
     "Position": [
-      "CB",
-      "DF",
-      "LB",
-      "RB"
+      "DF"
     ],
     "Stats": {
       "level": 3.0,
@@ -205,10 +163,7 @@
     "Id": 13,
     "Name": "Nico Laderach",
     "Position": [
-      "CB",
-      "DF",
-      "LB",
-      "RB"
+      "DF"
     ],
     "Stats": {
       "level": 3.5,
@@ -222,8 +177,7 @@
     "Position": [
       "FW",
       "GK",
-      "MF",
-      "CM"
+      "MF"
     ],
     "Stats": {
       "level": 3.8,
@@ -236,13 +190,7 @@
     "Name": "Ale Masferrer",
     "Position": [
       "DF",
-      "MF",
-      "CB",
-      "LB",
-      "CM",
-      "RB",
-      "RW",
-      "LW"
+      "MF"
     ],
     "Stats": {
       "level": 4.0,
@@ -255,9 +203,7 @@
     "Name": "Rick (Halcon)",
     "Position": [
       "MF",
-      "LB",
-      "CM",
-      "RB",
+      "DF",
       "FW"
     ],
     "Stats": {
@@ -272,9 +218,7 @@
     "Position": [
       "DF",
       "MF",
-      "GK",
-      "RW",
-      "LW"
+      "GK"
     ],
     "Stats": {
       "level": 3.0,
@@ -287,10 +231,7 @@
     "Name": "Dito",
     "Position": [
       "MF",
-      "FW",
-      "LW",
-      "RW",
-      "CM"
+      "FW"
     ],
     "Stats": {
       "level": 4.2,
@@ -330,8 +271,7 @@
     "Name": "Victor Lopez",
     "Position": [
       "GK",
-      "DF",
-      "CB"
+      "DF"
     ],
     "Stats": {
       "level": 2.8,
@@ -345,7 +285,7 @@
     "Position": [
       "GK",
       "DF",
-      "LW"
+      "MF"
     ],
     "Stats": {
       "level": 3.3,
@@ -357,9 +297,7 @@
     "Id": 23,
     "Name": "Isra",
     "Position": [
-      "DF",
-      "LB",
-      "RB"
+      "DF"
     ],
     "Stats": {
       "level": 3.2,
@@ -372,10 +310,7 @@
     "Name": "Salta",
     "Position": [
       "MF",
-      "FW",
-      "LW",
-      "RW",
-      "CM"
+      "FW"
     ],
     "Stats": {
       "level": 4.0,
@@ -388,10 +323,7 @@
     "Name": "Emmanuel",
     "Position": [
       "MF",
-      "FW",
-      "LW",
-      "RW",
-      "CM"
+      "FW"
     ],
     "Stats": {
       "level": 1.5,
@@ -404,9 +336,7 @@
     "Name": "Jose Luis (hermano Gabo)",
     "Position": [
       "DF",
-      "MF",
-      "CM",
-      "CB"
+      "MF"
     ],
     "Stats": {
       "level": 3.0,
@@ -419,8 +349,7 @@
     "Name": "Jose Luis (papa Gabo)",
     "Position": [
       "GK",
-      "DF",
-      "CB"
+      "DF"
     ],
     "Stats": {
       "level": 3.0,
@@ -433,13 +362,7 @@
     "Name": "Cesar",
     "Position": [
       "DF",
-      "MF",
-      "LW",
-      "RW",
-      "CM",
-      "LB",
-      "RB",
-      "CB"
+      "MF"
     ],
     "Stats": {
       "level": 3.83,
@@ -452,13 +375,8 @@
     "Name": "Tomasso",
     "Position": [
       "FW",
-      "LW",
-      "RW",
-      "DF",
-      "CB",
-      "LB",
-      "RB",
-      "CM"
+      "MF",
+      "DF"
     ],
     "Stats": {
       "level": 2.6,
@@ -485,8 +403,7 @@
     "Name": "Brian",
     "Position": [
       "FW",
-      "LW",
-      "RW"
+      "MF"
     ],
     "Stats": {
       "level": 3.3,
@@ -498,9 +415,8 @@
     "Id": 32,
     "Name": "Felipe",
     "Position": [
-      "RW",
-      "DF",
-      "MF"
+      "MF",
+      "DF"
     ],
     "Stats": {
       "level": 3.0,
@@ -512,10 +428,7 @@
     "Id": 33,
     "Name": "Luis",
     "Position": [
-      "MF",
-      "CM",
-      "LW",
-      "RW"
+      "MF"
     ],
     "Stats": {
       "level": 3.5,
@@ -539,16 +452,10 @@
   },
   {
     "Id": 35,
-    "Name": "Frano fino 🇦🇷",
+    "Name": "Frano fino \ud83c\udde6\ud83c\uddf7",
     "Position": [
       "MF",
-      "DF",
-      "LW",
-      "RW",
-      "CM",
-      "CB",
-      "LB",
-      "RB"
+      "DF"
     ],
     "Stats": {
       "level": 3.8,
@@ -558,13 +465,10 @@
   },
   {
     "Id": 36,
-    "Name": "Maxi H (Frano fino 🇦🇷)",
+    "Name": "Maxi H (Frano fino \ud83c\udde6\ud83c\uddf7)",
     "Position": [
-      "RW",
       "MF",
-      "LW",
-      "CM",
-      "CB"
+      "DF"
     ],
     "Stats": {
       "level": 4.7,
@@ -576,7 +480,7 @@
     "Id": 37,
     "Name": "Christian (Gabo)",
     "Position": [
-      "LW"
+      "MF"
     ],
     "Stats": {
       "level": 4.0,
@@ -588,7 +492,6 @@
     "Id": 38,
     "Name": "Johan (Christian/Gabo)",
     "Position": [
-      "CB",
       "DF"
     ],
     "Stats": {
@@ -601,10 +504,9 @@
     "Id": 39,
     "Name": "Juan (Christian/Gabo)",
     "Position": [
-      "CB",
+      "DF",
       "MF",
-      "FW",
-      "CM"
+      "FW"
     ],
     "Stats": {
       "level": 4.0,
@@ -617,8 +519,7 @@
     "Name": "Christian Gonzalez (Brian)",
     "Position": [
       "FW",
-      "LW",
-      "RW"
+      "MF"
     ],
     "Stats": {
       "level": 3.7,

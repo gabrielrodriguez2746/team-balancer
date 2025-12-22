@@ -192,7 +192,7 @@ class PlayerManager:
                 if name:
                     self.remove_player_by_name(name)
             elif choice == '3':
-                position = input("Enter position (DF, FW, CM, etc.): ").strip().upper()
+                position = input("Enter position (GK, DF, MF, FW): ").strip().upper()
                 if position:
                     self.remove_players_by_position(position)
             elif choice == '4':

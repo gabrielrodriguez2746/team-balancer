@@ -1203,11 +1203,21 @@ class StreamlitTeamBalancerUI:
         )
 
         # Position players on the field
-        team_a_positions = self._get_player_positions(combination.team1, 'left')
-        team_b_positions = self._get_player_positions(combination.team2, 'right')
+        num_teams = len(combination.teams)
+        team_colors = ['red', 'blue', 'green', 'orange', 'purple', 'brown']
+        team_labels = ['A', 'B', 'C', 'D', 'E', 'F']
+        
+        # For 2 teams, use left/right positioning
+        if num_teams == 2:
+            team_a_positions = self._get_player_positions(combination.teams[0], 'left')
+            team_b_positions = self._get_player_positions(combination.teams[1], 'right')
+        else:
+            # For more teams, distribute across field
+            team_a_positions = self._get_player_positions(combination.teams[0], 'left')
+            team_b_positions = self._get_player_positions(combination.teams[1], 'right')
 
         # Add Team A players (left side - red/orange)
-        for player in combination.team1:
+        for player in combination.teams[0]:
             if player.name in team_a_positions:
                 pos = team_a_positions[player.name]
 
@@ -1250,47 +1260,48 @@ class StreamlitTeamBalancerUI:
                 ))
 
         # Add Team B players (right side - blue)
-        for player in combination.team2:
-            if player.name in team_b_positions:
-                pos = team_b_positions[player.name]
+        if num_teams >= 2:
+            for player in combination.teams[1]:
+                if player.name in team_b_positions:
+                    pos = team_b_positions[player.name]
 
-                # Truncate long names for display
-                display_name = player.name[:12] + "..." if len(player.name) > 12 else player.name
+                    # Truncate long names for display
+                    display_name = player.name[:12] + "..." if len(player.name) > 12 else player.name
 
-                # Create hover text with player stats if enabled
-                if show_stats:
-                    hover_text = f"""
-                    <b>{player.name}</b><br>
-                    Position: {', '.join([p.value for p in player.positions])}<br>
-                    Level: {player.stats.level}<br>
-                    Stamina: {player.stats.stamina}<br>
-                    Speed: {player.stats.speed}<br>
-                    Total: {player.stats.level + player.stats.stamina + player.stats.speed:.1f}
-                    """
-                    hover_info = 'text'
-                    hovertemplate = hover_text
-                else:
-                    hover_info = 'skip'
-                    hovertemplate = None
+                    # Create hover text with player stats if enabled
+                    if show_stats:
+                        hover_text = f"""
+                        <b>{player.name}</b><br>
+                        Position: {', '.join([p.value for p in player.positions])}<br>
+                        Level: {player.stats.level}<br>
+                        Stamina: {player.stats.stamina}<br>
+                        Speed: {player.stats.speed}<br>
+                        Total: {player.stats.level + player.stats.stamina + player.stats.speed:.1f}
+                        """
+                        hover_info = 'text'
+                        hovertemplate = hover_text
+                    else:
+                        hover_info = 'skip'
+                        hovertemplate = None
 
-                fig.add_trace(go.Scatter(
-                    x=[pos[0]],
-                    y=[pos[1]],
-                    mode='markers+text',
-                    marker=dict(
-                        size=25,
-                        color='blue',
-                        symbol='circle',
-                        line=dict(color='darkblue', width=2)
-                    ),
-                    text=[display_name],
-                    textposition='bottom center',
-                    textfont=dict(size=10, color='black'),
-                    name=f'Team B - {player.name}',
-                    showlegend=False,
-                    hoverinfo=hover_info,
-                    hovertemplate=hovertemplate
-                ))
+                    fig.add_trace(go.Scatter(
+                        x=[pos[0]],
+                        y=[pos[1]],
+                        mode='markers+text',
+                        marker=dict(
+                            size=25,
+                            color='blue',
+                            symbol='circle',
+                            line=dict(color='darkblue', width=2)
+                        ),
+                        text=[display_name],
+                        textposition='bottom center',
+                        textfont=dict(size=10, color='black'),
+                        name=f'Team B - {player.name}',
+                        showlegend=False,
+                        hoverinfo=hover_info,
+                        hovertemplate=hovertemplate
+                    ))
 
         # Update layout for screenshot-friendly design
         fig.update_layout(
@@ -1439,33 +1450,21 @@ class StreamlitTeamBalancerUI:
             # Team A positions (left side) - multiple slots per position
             position_slots = {
                 'FW': [(10, 30), (12, 25), (12, 35)],      # Forward positions
-                'LW': [(8, 20), (10, 15), (6, 25)],        # Left wing positions
-                'RW': [(8, 40), (10, 45), (6, 35)],        # Right wing positions
-                'CM': [(25, 30), (28, 25), (28, 35)],      # Center mid positions
                 'MF': [(25, 30), (28, 25), (28, 35)],      # Midfielder positions
                 'DF': [(15, 30), (18, 25), (18, 35)],      # Defender positions
-                'CB': [(15, 30), (18, 25), (18, 35)],      # Center back positions
-                'LB': [(15, 15), (18, 10), (12, 20)],      # Left back positions
-                'RB': [(15, 45), (18, 50), (12, 40)],      # Right back positions
                 'GK': [(5, 30), (3, 25), (3, 35)],         # Goalkeeper positions
             }
         else:
             # Team B positions (right side) - multiple slots per position
             position_slots = {
                 'FW': [(90, 30), (88, 25), (88, 35)],      # Forward positions
-                'LW': [(92, 20), (90, 15), (94, 25)],      # Left wing positions
-                'RW': [(92, 40), (90, 45), (94, 35)],      # Right wing positions
-                'CM': [(75, 30), (72, 25), (72, 35)],      # Center mid positions
                 'MF': [(75, 30), (72, 25), (72, 35)],      # Midfielder positions
                 'DF': [(85, 30), (82, 25), (82, 35)],      # Defender positions
-                'CB': [(85, 30), (82, 25), (82, 35)],      # Center back positions
-                'LB': [(85, 15), (82, 10), (88, 20)],      # Left back positions
-                'RB': [(85, 45), (82, 50), (88, 40)],      # Right back positions
                 'GK': [(95, 30), (97, 25), (97, 35)],      # Goalkeeper positions
             }
 
         # Position priority order (closest to forward)
-        position_priority = ['FW', 'LW', 'RW', 'CM', 'MF', 'DF', 'CB', 'LB', 'RB', 'GK']
+        position_priority = ['FW', 'MF', 'DF', 'GK']
 
         # Track used coordinates to avoid overlap
         used_coords = set()
