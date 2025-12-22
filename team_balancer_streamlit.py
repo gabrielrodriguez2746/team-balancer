@@ -848,36 +848,30 @@ class StreamlitTeamBalancerUI:
             while len(team_data) < max_rows:
                 team_data.append({col: '' for col in header_values})
         
-        # Create combined header with team labels
+        # Create combined header with team labels (no separators)
         combined_header = []
         for team_idx in range(num_teams):
             team_header = [f'TEAM {team_idx + 1}'] + [''] * (len(header_values) - 1)
             combined_header.extend(team_header)
-            if team_idx < num_teams - 1:  # Add separator between teams
-                combined_header.append('')
         
-        # Create combined data rows
+        # Create combined data rows (no separators)
         combined_data = []
         for row_idx in range(max_rows):
             row_data = []
             for team_idx, team_data in enumerate(teams_data):
                 for col in header_values:
                     row_data.append(team_data[row_idx][col])
-                if team_idx < num_teams - 1:  # Add separator between teams
-                    row_data.append('')
             combined_data.append(row_data)
         
         # Transpose data for plotly table
         table_data = list(zip(*combined_data)) if combined_data else []
         
-        # Create alternating colors for teams
+        # Create alternating colors for teams (no separator colors)
         team_colors = ['#E3F2FD', '#FFEBEE', '#E8F5E8', '#FFF3E0', '#F3E5F5', '#E0F2F1']
         cell_colors = []
         for team_idx in range(num_teams):
             color = team_colors[team_idx % len(team_colors)]
             cell_colors.extend([color] * len(header_values))
-            if team_idx < num_teams - 1:  # Add separator color
-                cell_colors.append('#FFFFFF')
         
         # Create fill_color structure for Plotly table
         # Since table_data is transposed (columns), fill_color should be per column
@@ -890,31 +884,33 @@ class StreamlitTeamBalancerUI:
             # Repeat this color for all rows in this column
             fill_color_per_column.append([col_color] * max_rows)
         
-        # Add table to figure
+        # Add table to figure (minimal line width to reduce white space)
         fig.add_trace(go.Table(
             header=dict(
                 values=combined_header,
                 fill_color='#1f77b4',
                 font=dict(color='white', size=14, family='Arial Black'),
                 align='center',
-                height=40
+                height=40,
+                line=dict(width=0.5, color='#1f77b4')  # Minimal line width
             ),
             cells=dict(
                 values=table_data,
                 fill_color=fill_color_per_column if fill_color_per_column else 'white',
                 font=dict(color='#000000', size=12, family='Arial', weight='bold'),
                 align='center',
-                height=35
+                height=35,
+                line=dict(width=0)  # No cell lines to eliminate white space between teams
             )
         ))
         
-        # Update layout
+        # Update layout (minimal margins to remove white space)
         fig.update_layout(
             title=f"Team Combination {combination_number}",
             title_x=0.5,
             width=min(800, 200 * num_teams),  # Adjust width based on number of teams
             height=50 + max_rows * 35,
-            margin=dict(l=0, r=0, t=50, b=0),
+            margin=dict(l=0, r=0, t=30, b=0),
             font=dict(family="Arial", size=12)
         )
         
