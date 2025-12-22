@@ -664,5 +664,33 @@
       "stamina": 2.67,
       "speed": 2.67
     }
+  },
+  {
+    "Id": 54,
+    "Name": "Robinson (amigo Christian)",
+    "Position": [
+      "FW",
+      "DF",
+      "MF"
+    ],
+    "Stats": {
+      "level": 4.4,
+      "stamina": 3.8,
+      "speed": 3.8
+    }
+  },
+  {
+    "Id": 54,
+    "Name": "Victor (amigo Christian)",
+    "Position": [
+      "FW",
+      "DF",
+      "MF"
+    ],
+    "Stats": {
+      "level": 3.2,
+      "stamina": 3.8,
+      "speed": 3.2
+    }
   }
 ]
