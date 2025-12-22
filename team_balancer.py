@@ -112,7 +112,6 @@ class TeamBalancerConfig:
     num_teams: int = 2  # Number of teams to generate
     top_n_teams: int = 5  # Increased to show more options
     diversity_threshold: float = 1.5  # Lowered to allow more diverse combinations
-    must_be_on_different_teams: List[List[int]] = field(default_factory=lambda: [[15, 23]])
     must_be_on_same_teams: List[List[int]] = field(default_factory=list)
     must_be_on_same_teams_by_team: Dict[int, List[List[int]]] = field(default_factory=dict)
     stat_weights: Dict[str, float] = field(default_factory=lambda: {"level": 1.0, "stamina": 1.0, "speed": 1.0})
@@ -250,12 +249,6 @@ class TeamBalancer:
     def _check_constraints(self, teams: List[List[Player]]) -> bool:
         """Check if team combination satisfies all constraints"""
         team_ids_sets = [{p.player_id for p in team} for team in teams]
-        
-        # Check must-be-separate constraints
-        for group in self.config.must_be_on_different_teams:
-            # If any team contains all players from the group, constraint is violated
-            if any(all(pid in team_ids for pid in group) for team_ids in team_ids_sets):
-                return False
         
         # Check must-be-same constraints
         for group in self.config.must_be_on_same_teams:
@@ -835,7 +828,6 @@ def initialize_system_from_json() -> Tuple[PlayerRegistry, TeamBalancer]:
         num_teams=getattr(config, 'num_teams', 2),  # Use config.num_teams with fallback
         top_n_teams=config.top_n_teams,
         diversity_threshold=config.diversity_threshold,
-        must_be_on_different_teams=config.must_be_on_different_teams,
         must_be_on_same_teams=config.must_be_on_same_teams,
         must_be_on_same_teams_by_team=getattr(config, 'must_be_on_same_teams_by_team', {}),
         stat_weights=config.stat_weights

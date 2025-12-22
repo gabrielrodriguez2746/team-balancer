@@ -18,7 +18,6 @@ class AppConfig:
     diversity_threshold: float = 1.5  # Lowered to allow more diverse combinations
     
     # Player constraints
-    must_be_on_different_teams: List[List[int]] = field(default_factory=lambda: [[15, 23]])
     must_be_on_same_teams: List[List[int]] = field(default_factory=list)
     
     # Stat weights for balance calculation
@@ -49,7 +48,6 @@ class AppConfig:
             "num_teams": self.num_teams,  # Include num_teams in serialization
             "top_n_teams": self.top_n_teams,
             "diversity_threshold": self.diversity_threshold,
-            "must_be_on_different_teams": self.must_be_on_different_teams,
             "must_be_on_same_teams": self.must_be_on_same_teams,
             "stat_weights": self.stat_weights,
             "log_level": self.log_level

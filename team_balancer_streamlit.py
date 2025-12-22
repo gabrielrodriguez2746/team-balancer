@@ -37,7 +37,6 @@ class StreamlitTeamBalancerUI:
             team_size=self.config.team_size,
             top_n_teams=self.config.top_n_teams,
             diversity_threshold=self.config.diversity_threshold,
-            must_be_on_different_teams=self.config.must_be_on_different_teams,
             must_be_on_same_teams=self.config.must_be_on_same_teams,
             stat_weights=self.config.stat_weights
         )
@@ -54,7 +53,6 @@ class StreamlitTeamBalancerUI:
         defaults = {
             'selected_players': set(),
             'together_players': set(),
-            'separate_players': set(),
             'team_size': 6,
             'current_page': "main"
         }
@@ -177,8 +175,6 @@ class StreamlitTeamBalancerUI:
             self._show_create_teams_page()
         elif st.session_state.current_page == "together":
             self._show_together_page()
-        elif st.session_state.current_page == "separate":
-            self._show_separate_page()
         elif st.session_state.current_page == "results":
             self._show_results_page()
     
@@ -224,7 +220,7 @@ class StreamlitTeamBalancerUI:
         **Features:**
         - 👥 **Player Management**: Add, edit, and manage player profiles
         - ⚽ **Team Creation**: Generate balanced teams based on player stats
-        - 🎯 **Constraints**: Set players who must play together or separately
+        - 🎯 **Constraints**: Set players who must play together
         - 📊 **Analytics**: View team balance statistics and visualizations
         """)
         
@@ -782,71 +778,6 @@ class StreamlitTeamBalancerUI:
                 st.rerun()
         
         with col2:
-            if st.button("Continue → Separate Selection", use_container_width=True, key="continue_separate"):
-                st.session_state.current_page = "separate"
-                st.rerun()
-    
-    def _show_separate_page(self):
-        """Show the 'players should not play together' page"""
-        st.markdown('<h1 class="sub-header">🚫 Players Should Not Play Together</h1>', unsafe_allow_html=True)
-        
-        if not st.session_state.selected_players:
-            st.error("No players selected. Please go back and select players.")
-            return
-        
-        # Get selected players
-        selected_players = [p for p in self.player_registry.get_all_players() 
-                          if p.player_id in st.session_state.selected_players]
-        
-        st.markdown("""
-        Select players who should NOT play on the same team, or skip this step.
-        You can select multiple pairs of players who should be separated.
-        """)
-        
-        # Player selection for separate groups
-        st.markdown("### 👥 Select Players to Keep Separate")
-        
-        # Convert to DataFrame
-        player_data = []
-        for player in selected_players:
-            player_data.append({
-                'ID': player.player_id,
-                'Name': player.name,
-                'Positions': ', '.join([pos.value for pos in player.positions]),
-                'Level': player.stats.level,
-                'Stamina': player.stats.stamina,
-                'Speed': player.stats.speed,
-                'Total': player.stats.level + player.stats.stamina + player.stats.speed
-            })
-        
-        df = pd.DataFrame(player_data)
-        
-        # Multi-select for separate players using player IDs as options
-        separate_player_ids = st.multiselect(
-            "Select players who should NOT play together:",
-            options=df['ID'].tolist(),
-            format_func=lambda x: f"{df[df['ID'] == x]['Name'].iloc[0]} (Level: {df[df['ID'] == x]['Level'].iloc[0]:.1f})"
-        )
-        
-        # Update separate players
-        st.session_state.separate_players = set(separate_player_ids)
-        
-        # Display separate players
-        if st.session_state.separate_players:
-            st.markdown("### 🚫 Players Who Will Be Kept Separate")
-            separate_players_data = [row for i, row in df.iterrows() if row['ID'] in st.session_state.separate_players]
-            separate_df = pd.DataFrame(separate_players_data)
-            st.dataframe(separate_df, use_container_width=True, hide_index=True)
-        
-        # Navigation buttons
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if st.button("← Back", use_container_width=True):
-                st.session_state.current_page = "create_teams"
-                st.rerun()
-        
-        with col2:
             if st.button("Generate Teams →", use_container_width=True, type="primary", key="generate_teams"):
                 self._generate_teams()
     
@@ -903,7 +834,6 @@ class StreamlitTeamBalancerUI:
             # Log per-team constraints for debugging
             print(f"   Per-team together constraints: {per_team_together_constraints}")
             together_constraints = []
-            separate_constraints = []
             
             # Together constraints (players who should be on same team)
             if st.session_state.together_players:
@@ -911,26 +841,10 @@ class StreamlitTeamBalancerUI:
                 # Convert to list of player IDs for the config
                 together_constraints = [[p.player_id for p in together_players]]
             
-            # Separate constraints (players who should not be on same team)
-            if st.session_state.separate_players:
-                separate_players = [p for p in selected_players if p.player_id in st.session_state.separate_players]
-                # Create pairs for separate constraints - convert to player IDs
-                for i in range(0, len(separate_players), 2):
-                    if i + 1 < len(separate_players):
-                        separate_constraints.append([separate_players[i].player_id, separate_players[i + 1].player_id])
-                    else:
-                        # Handle odd player - add to first group or create single constraint
-                        if separate_constraints:
-                            separate_constraints[0].append(separate_players[i].player_id)
-                        else:
-                            separate_constraints.append([separate_players[i].player_id])
-            
             # Log constraints for debugging
             print(f"\n🔗 CONSTRAINT ANALYSIS:")
             print(f"   Together players: {[p.name for p in selected_players if p.player_id in st.session_state.together_players]}")
-            print(f"   Separate players: {[p.name for p in selected_players if p.player_id in st.session_state.separate_players]}")
             print(f"   Together constraints: {together_constraints}")
-            print(f"   Separate constraints: {separate_constraints}")
             
             # Create new team balancer config with dynamic team size and constraints
             dynamic_config = TeamBalancerConfig(
@@ -938,7 +852,6 @@ class StreamlitTeamBalancerUI:
                 num_teams=num_teams,  # Use configured number of teams
                 top_n_teams=self.config.top_n_teams,
                 diversity_threshold=self.config.diversity_threshold,
-                must_be_on_different_teams=separate_constraints,  # Use dynamic separate constraints
                 must_be_on_same_teams=together_constraints,       # Use dynamic together constraints
                 must_be_on_same_teams_by_team=per_team_together_constraints,
                 stat_weights=self.config.stat_weights
@@ -952,49 +865,6 @@ class StreamlitTeamBalancerUI:
             for player in selected_players:
                 print(f"   • {player.name} (Level: {player.stats.level}, Pos: {', '.join([pos.value for pos in player.positions])})")
             
-            status_text.text("Preparing team generation...")
-            progress_bar.progress(25)
-            
-            # Prepare constraints
-            # Prepare per-team constraints
-            per_team_together_constraints = {}
-            
-            # Per-team together constraints (players who should be on specific teams)
-            if st.session_state.get("per_team_together_constraints"):
-                for team_num, player_ids in st.session_state.per_team_together_constraints.items():
-                    # Filter out invalid player IDs
-                    valid_player_ids = [pid for pid in player_ids if pid in selected_player_ids]
-                    if valid_player_ids and len(valid_player_ids) != len(player_ids):
-                        print(f"   Warning: Filtered out invalid player IDs for team {team_num}: {set(player_ids) - set(valid_player_ids)}")
-                    player_ids = valid_player_ids
-                    # Filter out invalid player IDs
-                    valid_player_ids = [pid for pid in player_ids if pid in selected_player_ids]
-                    if valid_player_ids and len(valid_player_ids) != len(player_ids):
-                        print(f"   Warning: Filtered out invalid player IDs for team {team_num}: {set(player_ids) - set(valid_player_ids)}")
-                    player_ids = valid_player_ids
-                    if valid_player_ids:  # Only add non-empty constraints
-                        per_team_together_constraints[team_num] = [valid_player_ids]
-            
-            # Log per-team constraints for debugging
-            # Log per-team constraints for debugging
-            print(f"   Per-team together constraints: {per_team_together_constraints}")
-            together_constraints = []
-            separate_constraints = []
-            
-            # Together constraints (players who should be on same team)
-            if st.session_state.together_players:
-                together_players = [p for p in selected_players if p.player_id in st.session_state.together_players]
-                # Convert to list of player IDs for the config
-                together_constraints = [[p.player_id for p in together_players]]
-            
-            # Separate constraints (players who should not be on same team)
-            if st.session_state.separate_players:
-                separate_players = [p for p in selected_players if p.player_id in st.session_state.separate_players]
-                # Create pairs for separate constraints - convert to player IDs
-                for i in range(0, len(separate_players), 2):
-                    if i + 1 < len(separate_players):
-                        separate_constraints.append([separate_players[i].player_id, separate_players[i + 1].player_id])
-            
             status_text.text("Generating team combinations...")
             progress_bar.progress(50)
             
@@ -1003,7 +873,6 @@ class StreamlitTeamBalancerUI:
             print(f"📊 Selected players: {len(selected_players)}")
             print(f"🎯 Team size: {actual_team_size}")
             print(f"🔗 Together constraints: {len(together_constraints)}")
-            print(f"🚫 Separate constraints: {len(separate_constraints)}")
             print("-" * 40)
             
             # Generate teams
