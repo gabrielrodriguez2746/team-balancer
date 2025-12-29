@@ -692,5 +692,17 @@
       "stamina": 3.8,
       "speed": 3.2
     }
+  },
+  {
+    "Id": 55,
+    "Name": "Ryder",
+    "Position": [
+      "DF"
+    ],
+    "Stats": {
+      "level": 2.0,
+      "stamina": 2.8,
+      "speed": 2.8
+    }
   }
 ]
