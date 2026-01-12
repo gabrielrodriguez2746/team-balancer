@@ -704,5 +704,24 @@
       "stamina": 2.8,
       "speed": 2.8
     }
+  },
+  {
+    "Id": 56,
+    "Name": "Davide",
+    "Position": [
+      "CB",
+      "DF",
+      "FW",
+      "LB",
+      "LW",
+      "MF",
+      "RB",
+      "RW"
+    ],
+    "Stats": {
+      "level": 4.0,
+      "stamina": 3.5,
+      "speed": 4.38
+    }
   }
 ]
