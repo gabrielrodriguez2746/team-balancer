@@ -709,14 +709,9 @@
     "Id": 56,
     "Name": "Davide",
     "Position": [
-      "CB",
-      "DF",
-      "FW",
-      "LB",
-      "LW",
       "MF",
-      "RB",
-      "RW"
+      "DF",
+      "FW"
     ],
     "Stats": {
       "level": 4.0,
