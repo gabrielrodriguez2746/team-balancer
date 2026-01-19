@@ -34,7 +34,7 @@
     ],
     "Stats": {
       "level": 3.0,
-      "stamina": 2.2,
+      "stamina": 2.6,
       "speed": 1.8
     }
   },
@@ -183,9 +183,9 @@
       "GK"
     ],
     "Stats": {
-      "level": 3.0,
-      "stamina": 3.0,
-      "speed": 3.0
+      "level": 2.6,
+      "stamina": 2.3,
+      "speed": 2.6
     }
   },
   {
@@ -283,7 +283,7 @@
   },
   {
     "Id": 25,
-    "Name": "Enmanuel",
+    "Name": "Emmanuel",
     "Position": [
       "FW",
       "MF"
@@ -330,7 +330,7 @@
     ],
     "Stats": {
       "level": 3.83,
-      "stamina": 2.67,
+      "stamina": 3.0,
       "speed": 3.17
     }
   },
@@ -714,7 +714,7 @@
       "FW"
     ],
     "Stats": {
-      "level": 4.0,
+      "level": 4.2,
       "stamina": 3.5,
       "speed": 4.38
     }
